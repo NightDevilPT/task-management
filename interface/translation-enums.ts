@@ -24,6 +24,7 @@ export enum TranslationErrorEnum {
 	INVALID_EMAIL_FORMAT = "invalidEmailFormat",
 	USER_ALREADY_EXISTS = "userAlreadyExists",
 	USER_CREATED_SUCCESSFULLY = "userCreatedSuccessfully",
+	PASSWORD_TOO_WEAK = "passwordTooWeak",
 	PASSWORD_MUST_BE_AT_LEAST_8_CHARACTERS = "passwordMustBeAtLeast8Characters",
 	PASSWORD_MUST_CONTAINS_AT_LEAST_ONE_LOWERCASE_LETTER = "passwordMustContainsAtLeastOneLowercaseLetter",
 	PASSWORD_MUST_CONTAIN_AT_LEAST_ONE_UPPERCASE_LETTER = "passwordMustContainAtLeastOneUppercaseLetter",
