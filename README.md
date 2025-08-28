@@ -3,16 +3,16 @@
 Of course. This is a crucial planning step. Here's a comprehensive list of API routes you'll need to build for your Task Management System, organized by module.
 
 ## Authentication Routes (`/api/auth/[...]`)
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Create a new user account |
-| `POST` | `/api/auth/login` | Login user & return JWT token |
-| `POST` | `/api/auth/logout` | Logout user (invalidate token) |
-| `GET` | `/api/auth/me` | Get current user's profile |
-| `PUT` | `/api/auth/me` | Update current user's profile |
-| `POST` | `/api/auth/refresh` | Refresh JWT token |
-| `POST` | `/api/auth/forgot-password` | Request password reset email |
-| `POST` | `/api/auth/reset-password` | Reset password with token |
+| Method | Endpoint | Description | Status |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Create a new user account | <p style="color:green; font-weight:bold;">DONE</p> |
+| `POST` | `/api/auth/login` | Login user & return JWT token | <p style="color:green; font-weight:bold;">DONE</p> |
+| `POST` | `/api/auth/logout` | Logout user (invalidate token) | <p style="color:green; font-weight:bold;">DONE</p> |
+| `PUT` | `/api/auth/verify` | Verify User | <p style="color:green; font-weight:bold;">DONE</p> |
+| `GET` | `/api/auth/me` | Get current user's profile | <p style="color:green; font-weight:bold;">DONE</p> |
+| `PUT` | `/api/auth/me` | Update current user's profile | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `POST` | `/api/auth/forgot-password` | Request password reset email | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `POST` | `/api/auth/reset-password` | Reset password with token | <p style="color:blue; font-weight:bold;">TODO</p> |
 
 ---
 

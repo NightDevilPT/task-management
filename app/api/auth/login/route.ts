@@ -93,7 +93,7 @@ async function loginHandler(request: NextRequest) {
 		// Update user with refresh token
 		const updatedUser = await prisma.user.update({
 			where: { id: user.id },
-			data: { refreshToken },
+			data: { refreshToken, lastLogin: new Date() },
 			select: {
 				id: true,
 				firstName: true,

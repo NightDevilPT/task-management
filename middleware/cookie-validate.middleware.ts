@@ -7,7 +7,7 @@ import { TranslationErrorEnum } from "@/interface/translation-enums";
 
 // Define your token payload interface
 export interface TokenPayload {
-	userId: string;
+	id: string;
 	email: string;
 	// Add other fields you store in the token
 	role?: string;
@@ -77,7 +77,7 @@ export function withTokenValidation(handler: Handler): Handler {
 						accessToken: newAccessToken,
 						refreshToken: newRefreshToken,
 					} = jwtService.generateToken({
-						userId: payload.userId,
+						id: payload.id,
 						email: payload.email,
 					});
 

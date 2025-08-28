@@ -8,6 +8,8 @@ export enum TranslationEnum {
 	PASSWORD_UPDATED_SUCCESSFULLY = "passwordUpdatedSuccessfully",
 	VERIFICATION_MAIL_SENT = "verificationMailSent",
 	LOGIN_SUCCESSFUL = "loginSuccessful",
+	LOGOUT_SUCCESSFUL = "logoutSuccessful",
+	USER_PROFILE_RETRIEVED = "userProfileRetrieved",
 }
 
 export enum TranslationErrorEnum {
