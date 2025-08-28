@@ -63,18 +63,9 @@ export interface EventBus {
 	unsubscribe(eventType: string, handler: EventHandler): void;
 }
 
-
 export enum CQRS_ENUMS {
-	// commands enum
-	REGISTER_USER_COMMAND = "REGISTER_USER_COMMAND",
-	VERIFY_USER_COMMAND= 'VERIFY_USER_COMMAND',
-	LOGIN_USER_COMMAND = "LOGIN_USER_COMMAND",
-
 	// events enum
 	REGISTERED_USER_EVENT = "REGISTERED_USER_EVENT",
 	USER_VERIFIED_EVENT = "USER_VERIFIED_EVENT",
 	USER_LOGINED_EVENT = "USER_LOGINED_EVENT",
-
-	// queries enum
-	GET_USER_BY_ID_QUERY = "GET_USER_BY_ID_QUERY",
 }

@@ -1,31 +1,123 @@
 // app/api/auth/register/route.ts
 import "@/lib/cqrs/setup";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import { validateEmail, validatePasswordWithErrors } from "@/lib/validator";
+import { generateOtp } from "@/lib/utils";
 import {
 	TranslationEnum,
 	TranslationErrorEnum,
 } from "@/interface/translation-enums";
-import { commandBus } from "@/lib/cqrs/command-bus";
 import { ApiResponse } from "@/interface/api.interface";
 import { NextRequest, NextResponse } from "next/server";
 import { withRequestTiming } from "@/middleware/timestamp.middleware";
-import { RegisterUserCommand } from "@/lib/commands/users/impl/register-user.command";
+import { eventBus } from "@/lib/cqrs/event-bus";
+import { UserRegisteredEvent } from "@/lib/events/users/impl/user-registered.event";
 
 async function registerHandler(request: NextRequest) {
 	try {
 		const body = await request.json();
 		const { firstName, lastName, username, email, password } = body;
 
-		// Execute command
-		const command = new RegisterUserCommand(
-			{ firstName, lastName, username, email, password },
-			{
-				correlationId: crypto.randomUUID(),
-				source: "api",
-				timestamp: new Date(),
-			}
-		);
+		// Validate required fields
+		if (!firstName || !lastName || !username || !email || !password) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
+				statusCode: 400,
+				error: "Validation Error",
+			};
+			return NextResponse.json(response, { status: 400 });
+		}
 
-		const user = await commandBus.execute(command);
+		// Check if user already exists
+		const existingUser = await prisma.user.findFirst({
+			where: { OR: [{ email }, { username }] },
+		});
+
+		if (existingUser) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.USER_ALREADY_EXISTS,
+				statusCode: 409,
+				error: "Registration Error",
+			};
+			return NextResponse.json(response, { status: 409 });
+		}
+
+		// Validate email format
+		if (!validateEmail(email)) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.INVALID_EMAIL_FORMAT,
+				statusCode: 400,
+				error: "Validation Error",
+			};
+			return NextResponse.json(response, { status: 400 });
+		}
+
+		// Validate password strength
+		const { isValid, error: passwordError } =
+			validatePasswordWithErrors(password);
+		if (!isValid) {
+			const response: ApiResponse = {
+				message:
+					passwordError || TranslationErrorEnum.PASSWORD_TOO_WEAK,
+				statusCode: 400,
+				error: "Validation Error",
+			};
+			return NextResponse.json(response, { status: 400 });
+		}
+
+		// Generate OTP and expiry
+		const otp = generateOtp();
+		const tokenExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+		// Hash password
+		const hashedPassword = await bcrypt.hash(password, 12);
+
+		// Create user
+		const user = await prisma.user.create({
+			data: {
+				firstName,
+				lastName,
+				username,
+				email,
+				password: hashedPassword,
+				isVerified: false,
+				isActive: true,
+				otp: otp,
+				otpExpiry: tokenExpiry,
+			},
+			select: {
+				id: true,
+				firstName: true,
+				lastName: true,
+				username: true,
+				email: true,
+				avatar: true,
+				isVerified: true,
+				createdAt: true,
+				updatedAt: true,
+			},
+		});
+
+		// Send verification email (replace with your email implementation)
+		// Generate a new correlation ID for the event
+		const correlationId = crypto.randomUUID();
+		await eventBus.publish(
+			new UserRegisteredEvent(
+				{
+					userId: user.id,
+					email: user.email,
+					firstName: user.firstName,
+					lastName: user.lastName,
+					otpCode: otp.toString(),
+					otpExpiry: tokenExpiry,
+				},
+				{
+					correlationId,
+					timestamp: new Date(),
+				}
+			)
+		);
 
 		// Create success response
 		const response: ApiResponse = {
@@ -38,34 +130,14 @@ async function registerHandler(request: NextRequest) {
 	} catch (error: any) {
 		console.error("Registration error:", error);
 
-		let statusCode = 500;
-		let errorMessage = TranslationErrorEnum.INTERNAL_SERVER_ERROR;
-
-		// Map specific errors to appropriate status codes
-		if (error.message === TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED) {
-			statusCode = 400;
-			errorMessage = TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED;
-		} else if (error.message === TranslationErrorEnum.USER_ALREADY_EXISTS) {
-			statusCode = 409;
-			errorMessage = TranslationErrorEnum.USER_ALREADY_EXISTS;
-		} else if (
-			error.message === TranslationErrorEnum.INVALID_EMAIL_FORMAT
-		) {
-			statusCode = 400;
-			errorMessage = TranslationErrorEnum.INVALID_EMAIL_FORMAT;
-		} else if (error.message.includes("Password must contain")) {
-			statusCode = 400;
-			errorMessage = error.message;
-		}
-
 		const response: ApiResponse = {
-			message: errorMessage,
-			statusCode: statusCode,
+			message: TranslationErrorEnum.INTERNAL_SERVER_ERROR,
+			statusCode: 500,
 			error: "Registration Error",
 			errors: error.message ? [error.message] : undefined,
 		};
 
-		return NextResponse.json(response, { status: statusCode });
+		return NextResponse.json(response, { status: 500 });
 	}
 }
 

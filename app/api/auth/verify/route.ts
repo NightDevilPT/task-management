@@ -1,37 +1,77 @@
 // app/api/auth/verify/route.ts
-import "@/lib/cqrs/setup";
+import { prisma } from "@/lib/prisma";
 import {
 	TranslationEnum,
 	TranslationErrorEnum,
 } from "@/interface/translation-enums";
-import { commandBus } from "@/lib/cqrs/command-bus";
 import { ApiResponse } from "@/interface/api.interface";
 import { NextRequest, NextResponse } from "next/server";
 import { withRequestTiming } from "@/middleware/timestamp.middleware";
-import { VerifyUserCommand } from "@/lib/commands/users/impl/verify-user.command";
 
 async function verifyHandler(request: NextRequest) {
 	try {
 		const body = await request.json();
 		const { email, otp } = body;
 
-		// Execute command
-		const command = new VerifyUserCommand(
-			{ email, otp },
-			{
-				correlationId: crypto.randomUUID(),
-				source: "api",
-				timestamp: new Date(),
-			}
-		);
+		// Validate required fields
+		if (!email || !otp) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
+				statusCode: 400,
+				error: "Validation Error",
+			};
+			return NextResponse.json(response, { status: 400 });
+		}
 
-		const result = await commandBus.execute(command);
+		// Find user with matching email and OTP
+		const user = await prisma.user.findFirst({
+			where: {
+				email,
+				otp: parseInt(otp),
+				otpExpiry: {
+					gt: new Date(), // OTP should not be expired
+				},
+			},
+		});
+
+		if (!user) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.INVALID_OR_EXPIRED_OTP,
+				statusCode: 400,
+				error: "Verification Error",
+			};
+			return NextResponse.json(response, { status: 400 });
+		}
+
+		// Update user to mark as verified and clear OTP fields
+		const updatedUser = await prisma.user.update({
+			where: { id: user.id },
+			data: {
+				isVerified: true,
+				otp: null,
+				otpExpiry: null,
+			},
+			select: {
+				id: true,
+				firstName: true,
+				lastName: true,
+				username: true,
+				email: true,
+				avatar: true,
+				isVerified: true,
+				createdAt: true,
+				updatedAt: true,
+			},
+		});
 
 		// Create success response
 		const response: ApiResponse = {
 			message: TranslationEnum.USER_VERIFIED_SUCCESSFULLY,
 			statusCode: 200,
-			data: result,
+			data: {
+				message: "User verified successfully",
+				user: updatedUser,
+			},
 		};
 
 		return NextResponse.json(response, { status: 200 });
