@@ -22,11 +22,11 @@ model User {
   avatar       String?  // URL to avatar image
   isVerified   Boolean  @default(false)
   password     String
-  token        String?  // For JWT to verify email or reset password
-  tokenExpiry DateTime? @map("token_expiry") // Expiry time for the token
+  otp        Int?  // For JWT to verify email or reset password
+  otpExpiry DateTime? @map("otp_expiry") // Expiry time for the token
   refreshToken String?  // For JWT refresh tokens
-  tcreate      DateTime @default(now()) @map("created_at")
-  tupdated     DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
   lastLogin    DateTime?
   isActive     Boolean  @default(true)
   

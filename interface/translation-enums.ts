@@ -7,6 +7,7 @@ export enum TranslationEnum {
 	OTP_SENT_FOR_PASSWORD_RESET = "otpSentForPasswordReset",
 	PASSWORD_UPDATED_SUCCESSFULLY = "passwordUpdatedSuccessfully",
 	VERIFICATION_MAIL_SENT = "verificationMailSent",
+	LOGIN_SUCCESSFUL = "loginSuccessful",
 }
 
 export enum TranslationErrorEnum {
@@ -34,4 +35,6 @@ export enum TranslationErrorEnum {
 	USER_ALREADY_VERIFIED = "userAlreadyVerified",
 	USER_NOT_VERIFIED = "userNotVerified",
 	INVALID_CREDENTIALS = "invalidCredentials",
+	INVALID_OR_EXPIRED_OTP = "invalidOrExpiredOtp",
+	USER_DEACTIVATED = "userDeactivated",
 }

@@ -2,7 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { eventBus } from "@/lib/cqrs/event-bus";
-import { validateEmail } from "@/lib/validator";
+import { validateEmail, validatePasswordWithErrors } from "@/lib/validator";
 import { generateOtp } from "@/lib/utils";
 import { CommandHandler } from "@/interface/cqrs.interface";
 import { RegisterUserCommand } from "../impl/register-user.command";
@@ -33,7 +33,7 @@ export class RegisterUserHandler implements CommandHandler<RegisterUserCommand> 
     }
 
     // Validate password strength
-    const { isValid, error: passwordError } = this.validatePasswordWithErrors(password);
+    const { isValid, error: passwordError } = validatePasswordWithErrors(password);
     if (!isValid) {
       throw new Error(passwordError || TranslationErrorEnum.PASSWORD_TOO_WEAK);
     }
@@ -55,8 +55,8 @@ export class RegisterUserHandler implements CommandHandler<RegisterUserCommand> 
         password: hashedPassword,
         isVerified: false,
         isActive: true,
-        token: otp.toString(), // Using refreshToken field for OTP
-        tokenExpiry: tokenExpiry,
+        otp: otp, // Using refreshToken field for OTP
+        otpExpiry: tokenExpiry,
       },
       select: {
         id: true,
@@ -66,8 +66,8 @@ export class RegisterUserHandler implements CommandHandler<RegisterUserCommand> 
         email: true,
         avatar: true,
         isVerified: true,
-        tcreate: true,
-        tupdated: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -90,37 +90,5 @@ export class RegisterUserHandler implements CommandHandler<RegisterUserCommand> 
     );
 
     return user;
-  }
-
-  private validatePasswordWithErrors(password: string): { isValid: boolean; error?: string } {
-    if (password.length < 6) {
-      return {
-        isValid: false,
-        error: "Password must be at least 6 characters long",
-      };
-    }
-
-    if (!/(?=.*[a-z])/.test(password)) {
-      return {
-        isValid: false,
-        error: "Password must contain at least one lowercase letter",
-      };
-    }
-
-    if (!/(?=.*[A-Z])/.test(password)) {
-      return {
-        isValid: false,
-        error: "Password must contain at least one uppercase letter",
-      };
-    }
-
-    if (!/(?=.*\d)/.test(password)) {
-      return {
-        isValid: false,
-        error: "Password must contain at least one number",
-      };
-    }
-
-    return { isValid: true };
   }
 }
