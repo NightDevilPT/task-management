@@ -10,6 +10,9 @@ export enum TranslationEnum {
 	LOGIN_SUCCESSFUL = "loginSuccessful",
 	LOGOUT_SUCCESSFUL = "logoutSuccessful",
 	USER_PROFILE_RETRIEVED = "userProfileRetrieved",
+	PASSWORD_RESET_EMAIL_SENT = "passwordResetEmailSent",
+	PASSWORD_RESET_SUCCESSFUL = "passwordResetSuccessful",
+	USER_PROFILE_UPDATED = "userProfileUpdated",
 }
 
 export enum TranslationErrorEnum {
@@ -39,4 +42,8 @@ export enum TranslationErrorEnum {
 	INVALID_CREDENTIALS = "invalidCredentials",
 	INVALID_OR_EXPIRED_OTP = "invalidOrExpiredOtp",
 	USER_DEACTIVATED = "userDeactivated",
+	INVALID_CURRENT_PASSWORD = "invalidCurrentPassword",
+	CURRENT_PASSWORD_REQUIRED = "currentPasswordRequired",
+	EMAIL_ALREADY_EXISTS = "emailAlreadyExists",
+	USERNAME_ALREADY_EXISTS = "usernameAlreadyExists",
 }
