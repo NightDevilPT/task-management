@@ -13,6 +13,13 @@ enum TeamRole {
   MEMBER
 }
 
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+  COMPLETED
+  ON_HOLD
+}
+
 model User {
   id           String   @id @default(cuid())
   firstName    String
@@ -22,11 +29,11 @@ model User {
   avatar       String?  // URL to avatar image
   isVerified   Boolean  @default(false)
   password     String
-  otp        Int?  // For JWT to verify email or reset password
-  otpExpiry DateTime? @map("otp_expiry") // Expiry time for the token
+  otp          Int?     // For JWT to verify email or reset password
+  otpExpiry    DateTime? @map("otp_expiry") // Expiry time for the token
   refreshToken String?  // For JWT refresh tokens
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
   lastLogin    DateTime?
   isActive     Boolean  @default(true)
   
@@ -40,8 +47,27 @@ model User {
   teamInvites     TeamInvite[]
   comments        Comment[]
   attachments     Attachment[]
+  createdProjects Project[] @relation("ProjectOwner")
 
   @@map("users")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  owner      User         @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId    String
+  teams      Team[]
+  tasks      Task[]
+  activities Activity[]
+  
+  @@map("projects")
 }
 
 model Team {
@@ -54,6 +80,8 @@ model Team {
   // Relations
   owner      User         @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId    String
+  project    Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId  String
   members    TeamMember[]
   tasks      Task[]
   invites    TeamInvite[]
@@ -110,8 +138,10 @@ model Task {
   assignedToId String?
   createdBy   User    @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Cascade)
   createdById String
-  team        Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId      String
+  team        Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId      String?
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
   comments    Comment[]
   attachments Attachment[]
   activities  Activity[]
@@ -179,6 +209,8 @@ model Activity {
   teamId    String?
   task      Task?  @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId    String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String?
   
   @@map("activities")
 }
