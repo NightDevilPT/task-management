@@ -21,6 +21,8 @@ export enum TranslationEnum {
 	TEAMS_RETRIEVED_SUCCESSFULLY = "teamsRetrievedSuccessfully",
 	TEAM_UPDATED_SUCCESSFULLY = "teamUpdatedSuccessfully",
 	INVITE_SENT_SUCCESSFULLY = "inviteSentSuccessfully",
+
+	TASK_CREATED_SUCCESSFULLY = "taskCreatedSuccessfully",
 }
 
 export enum TranslationErrorEnum {
@@ -32,6 +34,7 @@ export enum TranslationErrorEnum {
 	SESSION_EXPIRED = "sessionExpired",
 	UNAUTHORIZED = "unauthorized",
 	INVALID_INPUT = "invalidInput",
+	FORBIDDEN = "forbidden",
 
 	// User Api Error Message
 	EMAIL_IS_REQUIRED = "emailIsRequired",
@@ -70,4 +73,17 @@ export enum TranslationErrorEnum {
 	INVALID_INVITE_TOKEN = "invalidInviteToken",
 	EMAIL_MISMATCH_INVITE = "emailMismatchInvite",
 	INVITE_NOT_FOUND_OR_EXPIRED = "inviteNotFoundOrExpired",
+	TEAM_NOT_FOUND_OR_ACCESS_DENIED = "teamNotFoundOrAccessDenied",
+
+	// Task Api Error Message
+	TASK_TITLE_TOO_SHORT = "taskTitleTooShort",
+	TEAM_ID_REQUIRED_FOR_NON_OWNERS = "teamIdRequiredForNonOwners",
+	YOU_DO_NOT_HAVE_ACCESS_TO_THIS_TEAM = "youDoNotHaveAccessToThisTeam",
+	NO_TEAM_AVAILABLE_IN_THIS_PROJECT_TO_ASSIGN_TASK = "noTeamAvailableInThisProjectToAssignTask",
+	ASSIGNED_USER_NOT_FOUND = "assignedUserNotFound",
+	ASSIGNED_USER_NOT_A_PART_OF_TEAM = "assignedUserNotAPartOfTeam",
+	INVALID_TASK_STATUS = "invalidTaskStatus",
+	INVALID_TASK_PRIORITY = "invalidTaskPriority",
+	TASK_DUE_DATE_BE_IN_FUTURE = "taskDueDateBeInFuture",
+	INVALID_DUE_DATE = "invalidDueDate",
 }

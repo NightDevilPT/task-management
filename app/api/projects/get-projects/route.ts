@@ -1,14 +1,14 @@
 // app/api/projects/route.ts (GET method - simplified)
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { ApiResponse } from "@/interface/api.interface";
 import {
 	TranslationEnum,
 	TranslationErrorEnum,
 } from "@/interface/translation-enums";
-import { withTokenValidation } from "@/middleware/cookie-validate.middleware";
-import { withRequestTiming } from "@/middleware/timestamp.middleware";
+import { prisma } from "@/lib/prisma";
+import { ApiResponse } from "@/interface/api.interface";
+import { NextRequest, NextResponse } from "next/server";
 import { TokenPayload } from "@/middleware/cookie-validate.middleware";
+import { withRequestTiming } from "@/middleware/timestamp.middleware";
+import { withTokenValidation } from "@/middleware/cookie-validate.middleware";
 
 async function getProjectsHandler(
 	request: NextRequest,

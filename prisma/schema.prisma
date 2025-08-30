@@ -26,6 +26,21 @@ enum ProjectStatus {
   ON_HOLD
 }
 
+enum TaskStatusEnum {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+  BLOCKED
+}
+
+enum TaskPriorityEnum {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 model User {
   id           String   @id @default(cuid())
   firstName    String
@@ -134,8 +149,8 @@ model Task {
   id          String   @id @default(cuid())
   title       String
   description String?
-  status      String   @default("TODO")
-  priority    String   @default("MEDIUM")
+  status      TaskStatusEnum   @default(TODO)
+  priority    TaskPriorityEnum   @default(MEDIUM)
   dueDate     DateTime? @map("due_date")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
