@@ -13,6 +13,9 @@ export enum TranslationEnum {
 	PASSWORD_RESET_EMAIL_SENT = "passwordResetEmailSent",
 	PASSWORD_RESET_SUCCESSFUL = "passwordResetSuccessful",
 	USER_PROFILE_UPDATED = "userProfileUpdated",
+	PROJECT_CREATED_SUCCESSFULLY = "projectCreatedSuccessfully",
+	PROJECTS_RETRIEVED_SUCCESSFULLY = "projectsRetrievedSuccessfully",
+	PROJECT_UPDATED_SUCCESSFULLY = "projectUpdatedSuccessfully",
 }
 
 export enum TranslationErrorEnum {
@@ -46,4 +49,7 @@ export enum TranslationErrorEnum {
 	CURRENT_PASSWORD_REQUIRED = "currentPasswordRequired",
 	EMAIL_ALREADY_EXISTS = "emailAlreadyExists",
 	USERNAME_ALREADY_EXISTS = "usernameAlreadyExists",
+
+	// Project Api Error Message
+	PROJECT_NOT_FOUND = "projectNotFound",
 }

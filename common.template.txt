@@ -1,0 +1,738 @@
+Hi i am full stack developer and having one project name is Task Management System.
+Prisma Schema : `generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TeamRole {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+  COMPLETED
+  ON_HOLD
+}
+
+model User {
+  id           String   @id @default(cuid())
+  firstName    String
+  lastName     String
+  username     String   @unique
+  email        String   @unique
+  avatar       String?  // URL to avatar image
+  isVerified   Boolean  @default(false)
+  password     String
+  otp          Int?     // For JWT to verify email or reset password
+  otpExpiry    DateTime? @map("otp_expiry") // Expiry time for the token
+  refreshToken String?  // For JWT refresh tokens
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  lastLogin    DateTime?
+  isActive     Boolean  @default(true)
+  
+  // Relations
+  teamMemberships TeamMember[]
+  createdTeams    Team[]      @relation("TeamOwner")
+  createdTasks    Task[]      @relation("TaskCreator")
+  assignedTasks   Task[]      @relation("TaskAssignee")
+  notifications   Notification[]
+  activities      Activity[]
+  teamInvites     TeamInvite[]
+  comments        Comment[]
+  attachments     Attachment[]
+  createdProjects Project[] @relation("ProjectOwner")
+
+  @@map("users")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  owner      User         @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId    String
+  teams      Team[]
+  tasks      Task[]
+  activities Activity[]
+  
+  @@map("projects")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  owner      User         @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId    String
+  project    Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId  String
+  members    TeamMember[]
+  tasks      Task[]
+  invites    TeamInvite[]
+  activities Activity[]
+  
+  @@map("teams")
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  role      TeamRole @default(MEMBER)
+  joinedAt  DateTime @default(now()) @map("joined_at")
+  
+  // Relations
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String
+  
+  @@unique([userId, teamId])
+  @@map("team_members")
+}
+
+model TeamInvite {
+  id        String   @id @default(cuid())
+  email     String
+  role      TeamRole @default(MEMBER)
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String
+  invitedBy User   @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+  invitedById String
+  
+  @@unique([email, teamId])
+  @@map("team_invites")
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String   @default("TODO")
+  priority    String   @default("MEDIUM")
+  dueDate     DateTime? @map("due_date")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  assignedTo  User?   @relation("TaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  assignedToId String?
+  createdBy   User    @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdById String
+  team        Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId      String?
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  comments    Comment[]
+  attachments Attachment[]
+  activities  Activity[]
+  
+  @@map("tasks")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  author    User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  task      Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String
+  
+  @@map("comments")
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  filename  String
+  url       String
+  size      Int
+  type      String
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  task      Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String
+  uploadedBy User  @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  uploadedById String
+  
+  @@map("attachments")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   // e.g., "TASK_ASSIGNED", "INVITE_RECEIVED", "COMMENT_ADDED"
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  
+  @@map("notifications")
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  action    String   // e.g., "CREATE_TASK", "UPDATE_TASK", "JOIN_TEAM"
+  details   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  team      Team?  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String?
+  task      Task?  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String?
+  
+  @@map("activities")
+}`
+
+API's i want to create : `# Task Management System
+
+Of course. This is a crucial planning step. Here's a comprehensive list of API routes you'll need to build for your Task Management System, organized by module.
+
+# Task Management System
+This document lists all planned API routes for the Task Management System, organized by module. Each route includes its implementation status.
+
+---
+
+## Authentication Routes (`/api/auth/[...]`)
+| Method | Endpoint | Description | Status |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Create a new user account | <p style="color:green; font-weight:bold;">DONE</p> |
+| `POST` | `/api/auth/login` | Login user & return JWT token | <p style="color:green; font-weight:bold;">DONE</p> |
+| `POST` | `/api/auth/logout` | Logout user (invalidate token) | <p style="color:green; font-weight:bold;">DONE</p> |
+| `PUT` | `/api/auth/verify` | Verify User | <p style="color:green; font-weight:bold;">DONE</p> |
+| `GET` | `/api/auth/me` | Get current user's profile | <p style="color:green; font-weight:bold;">DONE</p> |
+| `PUT` | `/api/auth/me` | Update current user's profile | <p style="color:green; font-weight:bold;">DONE</p> |
+| `POST` | `/api/auth/forgot-password` | Request password reset email | <p style="color:green; font-weight:bold;">DONE</p> |
+| `POST` | `/api/auth/reset-password` | Reset password with token | <p style="color:green; font-weight:bold;">DONE</p> |
+
+---
+
+## User Routes (`/api/users/[...]`)
+| Method | Endpoint | Description | Status |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/users` | Get all users (for mentions/search) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/users/:userId` | Get a specific user's public profile | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/users/me/teams` | Get current user's teams & roles | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/users/me/tasks` | Get current user's assigned tasks | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/users/me/notifications` | Get current user's notifications | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `PUT` | `/api/users/me/notifications/read` | Mark notifications as read | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+---
+
+## Project Routes (`/api/projects/[...]`)
+| Method | Endpoint | Description | Status |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/projects` | Create a new project | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/projects` | Get all projects owned or member-associated by current user | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/projects/:projectId` | Get details of a specific project | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `PUT` | `/api/projects/:projectId` | Update project details (Owner only) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `DELETE` | `/api/projects/:projectId` | Delete/archive a project (Owner only) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/projects/:projectId/teams` | Get all teams under a project | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/projects/:projectId/tasks` | Get all tasks under a project (aggregate from teams) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/projects/:projectId/activity` | Get activity feed for a project | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+---
+
+## Team Routes (`/api/teams/[...]`)
+| Method | Endpoint | Description | Status |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/teams` | Create a new team | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/teams` | Get all teams current user is member of | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/teams/:teamId` | Get a specific team's details | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `PUT` | `/api/teams/:teamId` | Update team details (Admin only) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `DELETE` | `/api/teams/:teamId` | Delete a team (Owner only) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/teams/:teamId/members` | Get all members of a team | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `POST` | `/api/teams/:teamId/invites` | Invite a user to a team (email) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/teams/:teamId/invites` | Get pending invites for a team | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `DELETE` | `/api/teams/:teamId/invites/:inviteId` | Cancel an invite | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `POST` | `/api/teams/invites/:token/accept` | Accept a team invite (via email token) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `POST` | `/api/teams/invites/:token/decline` | Decline a team invite | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `PUT` | `/api/teams/:teamId/members/:userId` | Update a member's role (Admin only) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `DELETE` | `/api/teams/:teamId/members/:userId` | Remove a member from the team (Admin only) | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+---
+
+## Task Routes (`/api/teams/:teamId/tasks/[...]`)
+| Method | Endpoint | Description | Status |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/teams/:teamId/tasks` | Create a new task in a team | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/teams/:teamId/tasks` | Get all tasks for a team (with filters) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/teams/:teamId/tasks/:taskId` | Get a specific task's details | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `PUT` | `/api/teams/:teamId/tasks/:taskId` | Update a task | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `DELETE` | `/api/teams/:teamId/tasks/:taskId` | Delete a task | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `PUT` | `/api/teams/:teamId/tasks/:taskId/status` | Update task status (e.g., move on Kanban) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `PUT` | `/api/teams/:teamId/tasks/:taskId/assign` | Assign/unassign a task to a user | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+---
+
+## Comment Routes (`/api/teams/:teamId/tasks/:taskId/comments/[...]`)
+| Method | Endpoint | Description | Status |
+| :--- | :--- | :--- | :--- |
+| `POST` | `.../comments` | Add a comment to a task | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `.../comments` | Get all comments for a task | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `PUT` | `.../comments/:commentId` | Edit a comment | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `DELETE` | `.../comments/:commentId` | Delete a comment | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+---
+
+## Attachment Routes (`/api/teams/:teamId/tasks/:taskId/attachments/[...]`)
+| Method | Endpoint | Description | Status |
+| :--- | :--- | :--- | :--- |
+| `POST` | `.../attachments` | Upload a file to a task | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `.../attachments` | Get all attachments for a task | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `DELETE` | `.../attachments/:attachmentId` | Delete an attachment | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+---
+
+## Activity & Notification Routes (`/api/[...]`)
+| Method | Endpoint | Description | Status |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/teams/:teamId/activity` | Get recent activity for a team | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET` | `/api/me/activity` | Get current user's global activity feed | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+---
+
+## Summary of Route Structure
+
+Your API structure will look like this in the `app/api/` directory:
+
+```
+app/api/
+├── auth/
+│   ├── register/route.ts
+│   ├── login/route.ts
+│   ├── logout/route.ts
+│   ├── me/route.ts
+│   └── ...
+├── users/
+│   ├── route.ts          # GET /api/users
+│   ├── [userId]/route.ts # GET /api/users/:userId
+│   └── me/
+│       ├── teams/route.ts
+│       ├── tasks/route.ts
+│       └── notifications/route.ts
+├── teams/
+│   ├── route.ts                      # GET, POST /api/teams
+│   ├── [teamId]/
+│   │   ├── route.ts                  # GET, PUT, DELETE /api/teams/:teamId
+│   │   ├── members/
+│   │   │   ├── route.ts              # GET /api/teams/:teamId/members
+│   │   │   └── [userId]/route.ts     # PUT, DELETE /api/teams/:teamId/members/:userId
+│   │   ├── invites/
+│   │   │   ├── route.ts              # GET, POST /api/teams/:teamId/invites
+│   │   │   └── [inviteId]/route.ts   # DELETE /api/teams/:teamId/invites/:inviteId
+│   │   └── tasks/
+│   │       ├── route.ts              # GET, POST /api/teams/:teamId/tasks
+│   │       └── [taskId]/
+│   │           ├── route.ts          # GET, PUT, DELETE /api/teams/:teamId/tasks/:taskId
+│   │           ├── comments/
+│   │           │   ├── route.ts
+│   │           │   └── [commentId]/route.ts
+│   │           └── attachments/
+│   │               ├── route.ts
+│   │               └── [attachmentId]/route.ts
+│   └── invites/
+│       └── [token]/
+│           ├── accept/route.ts
+│           └── decline/route.ts
+└── me/
+    ├── notifications/route.ts
+    └── activity/route.ts
+```
+
+**Priority Order for Implementation (MVP First):**
+1.  Auth Routes (`/api/auth/*`)
+2.  Team Routes (`/api/teams`, `/api/teams/[teamId]`)
+3.  Task Routes (`/api/teams/[teamId]/tasks`)
+4.  Comment Routes
+5.  Invite & Member Routes
+6.  The rest (Attachments, Activity, etc.)
+
+
+
+
+
+
+<hr>
+
+```mermaid
+flowchart TD
+    User
+
+    User -->|teamMemberships| TeamMember
+    User -->|createdTeams| Team
+    User -->|createdTasks| Task
+    User -->|assignedTasks| Task
+    User -->|teamInvites| TeamInvite
+    User -->|comments| Comment
+    User -->|attachments| Attachment
+    User -->|notifications| Notification
+    User -->|activities| Activity
+
+    subgraph TeamContext [Team & Membership]
+        TeamMember -->|defines role in| Team
+    end
+
+    subgraph TaskContext [Task & Collaboration]
+        Comment
+        Attachment
+    end
+
+    subgraph System [System & Logging]
+        Notification
+        Activity
+    end
+```
+`
+
+Reference code you can take a look to know how i am creating the api in nextjs : `// app/api/auth/me/route.ts
+import {
+	TranslationEnum,
+	TranslationErrorEnum,
+} from "@/interface/translation-enums";
+import {
+	TokenPayload,
+	withTokenValidation,
+} from "@/middleware/cookie-validate.middleware";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import { validateEmail } from "@/lib/validator";
+import { ApiResponse } from "@/interface/api.interface";
+import { NextRequest, NextResponse } from "next/server";
+import { withRequestTiming } from "@/middleware/timestamp.middleware";
+
+async function meHandler(request: NextRequest, payload?: TokenPayload) {
+	try {
+		if (!payload) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.UNAUTHORIZED,
+				statusCode: 401,
+				error: "Authentication Error",
+			};
+			return NextResponse.json(response, { status: 401 });
+		}
+
+		console.log(payload, "PAYLOAD");
+
+		// Get user from database
+		const user = await prisma.user.findUnique({
+			where: { id: payload.id },
+			select: {
+				id: true,
+				firstName: true,
+				lastName: true,
+				username: true,
+				email: true,
+				avatar: true,
+				isVerified: true,
+				isActive: true,
+				createdAt: true,
+				updatedAt: true,
+				lastLogin: true,
+			},
+		});
+
+		if (!user) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.USER_DOES_NOT_EXIST,
+				statusCode: 404,
+				error: "User Error",
+			};
+			return NextResponse.json(response, { status: 404 });
+		}
+
+		if (!user.isActive) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.USER_DEACTIVATED,
+				statusCode: 403,
+				error: "Account Error",
+			};
+			return NextResponse.json(response, { status: 403 });
+		}
+
+		// Create success response
+		const response: ApiResponse = {
+			message: TranslationEnum.USER_PROFILE_RETRIEVED,
+			statusCode: 200,
+			data: user,
+		};
+
+		return NextResponse.json(response, { status: 200 });
+	} catch (error: any) {
+		console.error("Get user profile error:", error);
+
+		const response: ApiResponse = {
+			message: TranslationErrorEnum.INTERNAL_SERVER_ERROR,
+			statusCode: 500,
+			error: "Profile Error",
+			errors: error.message ? [error.message] : undefined,
+		};
+
+		return NextResponse.json(response, { status: 500 });
+	}
+}
+
+async function updateMeHandler(request: NextRequest, payload?: TokenPayload) {
+	try {
+		if (!payload) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.UNAUTHORIZED,
+				statusCode: 401,
+				error: "Authentication Error",
+			};
+			return NextResponse.json(response, { status: 401 });
+		}
+
+		const body = await request.json();
+		const {
+			firstName,
+			lastName,
+			username,
+			email,
+			avatar,
+			currentPassword,
+			newPassword,
+		} = body;
+
+		// Check if user exists and is active
+		const existingUser = await prisma.user.findUnique({
+			where: { id: payload.id },
+		});
+
+		if (!existingUser) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.USER_DOES_NOT_EXIST,
+				statusCode: 404,
+				error: "User Error",
+			};
+			return NextResponse.json(response, { status: 404 });
+		}
+
+		if (!existingUser.isActive) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.USER_DEACTIVATED,
+				statusCode: 403,
+				error: "Account Error",
+			};
+			return NextResponse.json(response, { status: 403 });
+		}
+
+		// Prepare update data
+		const updateData: any = {};
+
+		// Validate and set basic fields
+		if (firstName !== undefined) {
+			if (!firstName.trim()) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
+			updateData.firstName = firstName.trim();
+		}
+
+		if (lastName !== undefined) {
+			if (!lastName.trim()) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
+			updateData.lastName = lastName.trim();
+		}
+
+		if (username !== undefined) {
+			if (!username.trim()) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
+
+			// Check if username is already taken by another user
+			const existingUsername = await prisma.user.findFirst({
+				where: {
+					username: username.trim(),
+					id: { not: payload.id },
+				},
+			});
+
+			if (existingUsername) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.USERNAME_ALREADY_EXISTS,
+					statusCode: 409,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 409 });
+			}
+
+			updateData.username = username.trim();
+		}
+
+		if (email !== undefined) {
+			if (!email.trim()) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.EMAIL_IS_REQUIRED,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
+
+			if (!validateEmail(email)) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.INVALID_EMAIL_FORMAT,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
+
+			// Check if email is already taken by another user
+			const existingEmail = await prisma.user.findFirst({
+				where: {
+					email: email.trim(),
+					id: { not: payload.id },
+				},
+			});
+
+			if (existingEmail) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.EMAIL_ALREADY_EXISTS,
+					statusCode: 409,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 409 });
+			}
+
+			updateData.email = email.trim();
+			// If email is changed, mark as unverified and generate new OTP
+			if (email !== existingUser.email) {
+				const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+				updateData.isVerified = false;
+				updateData.otp = otp;
+				updateData.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+				// TODO: Send verification email here
+			}
+		}
+
+		if (avatar !== undefined) {
+			updateData.avatar = avatar;
+		}
+
+		// Handle password change
+		if (newPassword) {
+			if (!currentPassword) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.CURRENT_PASSWORD_REQUIRED,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
+
+			// Verify current password
+			const isCurrentPasswordValid = await bcrypt.compare(
+				currentPassword,
+				existingUser.password
+			);
+			if (!isCurrentPasswordValid) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.INVALID_CURRENT_PASSWORD,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
+
+			// Hash new password
+			updateData.password = await bcrypt.hash(newPassword, 12);
+		}
+
+		// Update user
+		const updatedUser = await prisma.user.update({
+			where: { id: payload.id },
+			data: updateData,
+			select: {
+				id: true,
+				firstName: true,
+				lastName: true,
+				username: true,
+				email: true,
+				avatar: true,
+				isVerified: true,
+				isActive: true,
+				createdAt: true,
+				updatedAt: true,
+			},
+		});
+
+		const response: ApiResponse = {
+			message: TranslationEnum.USER_PROFILE_UPDATED,
+			statusCode: 200,
+			data: updatedUser,
+		};
+
+		return NextResponse.json(response, { status: 200 });
+	} catch (error: any) {
+		console.error("Update user profile error:", error);
+
+		const response: ApiResponse = {
+			message: TranslationErrorEnum.INTERNAL_SERVER_ERROR,
+			statusCode: 500,
+			error: "Update Error",
+			errors: error.message ? [error.message] : undefined,
+		};
+
+		return NextResponse.json(response, { status: 500 });
+	}
+}
+
+// Apply token validation middleware
+const wrappedGetHandler = withTokenValidation(meHandler);
+const wrappedPutHandler = withTokenValidation(updateMeHandler);
+
+export const GET = withRequestTiming(wrappedGetHandler);
+export const PUT = withRequestTiming(wrappedPutHandler);
+`
+
+
+Please memorize this all the code in you memory so i can proceed the development with you
