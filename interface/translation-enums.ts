@@ -16,6 +16,10 @@ export enum TranslationEnum {
 	PROJECT_CREATED_SUCCESSFULLY = "projectCreatedSuccessfully",
 	PROJECTS_RETRIEVED_SUCCESSFULLY = "projectsRetrievedSuccessfully",
 	PROJECT_UPDATED_SUCCESSFULLY = "projectUpdatedSuccessfully",
+
+	TEAM_CREATED_SUCCESSFULLY = "teamCreatedSuccessfully",
+	TEAMS_RETRIEVED_SUCCESSFULLY = "teamsRetrievedSuccessfully",
+	TEAM_UPDATED_SUCCESSFULLY = "teamUpdatedSuccessfully",
 }
 
 export enum TranslationErrorEnum {
@@ -52,4 +56,10 @@ export enum TranslationErrorEnum {
 
 	// Project Api Error Message
 	PROJECT_NOT_FOUND = "projectNotFound",
+
+	// Team Api Error Message
+	TEAM_NAME_ALREADY_EXISTS_IN_PROJECT = "teamNameAlreadyExistsInProject",
+	TEAM_NOT_FOUND = "teamsNotFound",
+	TEAM_ACCESS_DENIED = "youDoNotHaveAccessToThisTeam",
+	TEAM_NAME_MIN_LENGTH = "teamNameMinLength",
 }

@@ -36,10 +36,10 @@ This document lists all planned API routes for the Task Management System, organ
 ## Project Routes (`/api/projects/[...]`)
 | Method | Endpoint | Description | Status |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/projects` | Create a new project | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/projects` | Get all projects owned or member-associated by current user | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/projects/:projectId` | Get details of a specific project | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT` | `/api/projects/:projectId` | Update project details (Owner only) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `POST` | `/api/projects` | Create a new project | <p style="color:green; font-weight:bold;">DONE</p> |
+| `GET` | `/api/projects` | Get all projects owned or member-associated by current user | <p style="color:green; font-weight:bold;">DONE</p> |
+| `GET` | `/api/projects/:projectId` | Get details of a specific project | <p style="color:green; font-weight:bold;">DONE</p> |
+| `PUT` | `/api/projects/:projectId` | Update project details (Owner only) | <p style="color:green; font-weight:bold;">DONE</p> |
 | `DELETE` | `/api/projects/:projectId` | Delete/archive a project (Owner only) | <p style="color:blue; font-weight:bold;">TODO</p> |
 | `GET` | `/api/projects/:projectId/teams` | Get all teams under a project | <p style="color:blue; font-weight:bold;">TODO</p> |
 | `GET` | `/api/projects/:projectId/tasks` | Get all tasks under a project (aggregate from teams) | <p style="color:blue; font-weight:bold;">TODO</p> |
@@ -50,19 +50,11 @@ This document lists all planned API routes for the Task Management System, organ
 ## Team Routes (`/api/teams/[...]`)
 | Method | Endpoint | Description | Status |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/teams` | Create a new team | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/teams` | Get all teams current user is member of | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/teams/:teamId` | Get a specific team's details | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT` | `/api/teams/:teamId` | Update team details (Admin only) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `DELETE` | `/api/teams/:teamId` | Delete a team (Owner only) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/teams/:teamId/members` | Get all members of a team | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `POST` | `/api/teams/:teamId/invites` | Invite a user to a team (email) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/teams/:teamId/invites` | Get pending invites for a team | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `DELETE` | `/api/teams/:teamId/invites/:inviteId` | Cancel an invite | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `POST` | `/api/teams/invites/:token/accept` | Accept a team invite (via email token) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `POST` | `/api/teams/invites/:token/decline` | Decline a team invite | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT` | `/api/teams/:teamId/members/:userId` | Update a member's role (Admin only) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `DELETE` | `/api/teams/:teamId/members/:userId` | Remove a member from the team (Admin only) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `POST` | `/api/teams` | Create a new team | <p style="color:green; font-weight:bold;">DONE</p> |
+| `GET` | `/api/teams` | Get all teams current user is member of | <p style="color:green; font-weight:bold;">DONE</p> |
+| `GET` | `/api/teams/:teamId` | Get a specific team's details | <p style="color:green; font-weight:bold;">DONE</p> |
+| `PUT` | `/api/teams/:teamId` | Update team details (Admin only) | <p style="color:green; font-weight:bold;">DONE</p> |
+
 
 ---
 
