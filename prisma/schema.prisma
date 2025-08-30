@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum TeamInviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+} 
+
 enum TeamRole {
   ADMIN
   MANAGER
@@ -110,6 +116,7 @@ model TeamInvite {
   email     String
   role      TeamRole @default(MEMBER)
   token     String   @unique
+  status   TeamInviteStatus   @default(PENDING) // e.g., PENDING, ACCEPTED, DECLINED
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
   

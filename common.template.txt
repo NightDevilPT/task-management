@@ -8,6 +8,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum TeamInviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+} 
+
 enum TeamRole {
   ADMIN
   MANAGER
@@ -111,6 +117,7 @@ model TeamInvite {
   email     String
   role      TeamRole @default(MEMBER)
   token     String   @unique
+  status   TeamInviteStatus   @default(PENDING) // e.g., PENDING, ACCEPTED, DECLINED
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
   
@@ -216,174 +223,114 @@ model Activity {
   @@map("activities")
 }`
 
-API's i want to create : `# Task Management System
+API's i want to create : `
+# Task Management System
 
 Of course. This is a crucial planning step. Here's a comprehensive list of API routes you'll need to build for your Task Management System, organized by module.
 
 # Task Management System
+
 This document lists all planned API routes for the Task Management System, organized by module. Each route includes its implementation status.
 
 ---
 
 ## Authentication Routes (`/api/auth/[...]`)
-| Method | Endpoint | Description | Status |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Create a new user account | <p style="color:green; font-weight:bold;">DONE</p> |
-| `POST` | `/api/auth/login` | Login user & return JWT token | <p style="color:green; font-weight:bold;">DONE</p> |
-| `POST` | `/api/auth/logout` | Logout user (invalidate token) | <p style="color:green; font-weight:bold;">DONE</p> |
-| `PUT` | `/api/auth/verify` | Verify User | <p style="color:green; font-weight:bold;">DONE</p> |
-| `GET` | `/api/auth/me` | Get current user's profile | <p style="color:green; font-weight:bold;">DONE</p> |
-| `PUT` | `/api/auth/me` | Update current user's profile | <p style="color:green; font-weight:bold;">DONE</p> |
-| `POST` | `/api/auth/forgot-password` | Request password reset email | <p style="color:green; font-weight:bold;">DONE</p> |
-| `POST` | `/api/auth/reset-password` | Reset password with token | <p style="color:green; font-weight:bold;">DONE</p> |
+
+| Method | Endpoint                    | Description                    | Status                                             |
+| :----- | :-------------------------- | :----------------------------- | :------------------------------------------------- |
+| `POST` | `/api/auth/register`        | Create a new user account      | <p style="color:green; font-weight:bold;">DONE</p> |
+| `POST` | `/api/auth/login`           | Login user & return JWT token  | <p style="color:green; font-weight:bold;">DONE</p> |
+| `POST` | `/api/auth/logout`          | Logout user (invalidate token) | <p style="color:green; font-weight:bold;">DONE</p> |
+| `PUT`  | `/api/auth/verify`          | Verify User                    | <p style="color:green; font-weight:bold;">DONE</p> |
+| `GET`  | `/api/auth/me`              | Get current user's profile     | <p style="color:green; font-weight:bold;">DONE</p> |
+| `PUT`  | `/api/auth/me`              | Update current user's profile  | <p style="color:green; font-weight:bold;">DONE</p> |
+| `POST` | `/api/auth/forgot-password` | Request password reset email   | <p style="color:green; font-weight:bold;">DONE</p> |
+| `POST` | `/api/auth/reset-password`  | Reset password with token      | <p style="color:green; font-weight:bold;">DONE</p> |
 
 ---
 
 ## User Routes (`/api/users/[...]`)
-| Method | Endpoint | Description | Status |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/users` | Get all users (for mentions/search) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/users/:userId` | Get a specific user's public profile | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/users/me/teams` | Get current user's teams & roles | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/users/me/tasks` | Get current user's assigned tasks | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/users/me/notifications` | Get current user's notifications | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT` | `/api/users/me/notifications/read` | Mark notifications as read | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+| Method | Endpoint                           | Description                          | Status                                            |
+| :----- | :--------------------------------- | :----------------------------------- | :------------------------------------------------ |
+| `GET`  | `/api/users`                       | Get all users (for mentions/search)  | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET`  | `/api/users/:userId`               | Get a specific user's public profile | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET`  | `/api/users/me/teams`              | Get current user's teams & roles     | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET`  | `/api/users/me/tasks`              | Get current user's assigned tasks    | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET`  | `/api/users/me/notifications`      | Get current user's notifications     | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `PUT`  | `/api/users/me/notifications/read` | Mark notifications as read           | <p style="color:blue; font-weight:bold;">TODO</p> |
 
 ---
 
 ## Project Routes (`/api/projects/[...]`)
-| Method | Endpoint | Description | Status |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/projects` | Create a new project | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/projects` | Get all projects owned or member-associated by current user | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/projects/:projectId` | Get details of a specific project | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT` | `/api/projects/:projectId` | Update project details (Owner only) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `DELETE` | `/api/projects/:projectId` | Delete/archive a project (Owner only) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/projects/:projectId/teams` | Get all teams under a project | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/projects/:projectId/tasks` | Get all tasks under a project (aggregate from teams) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/projects/:projectId/activity` | Get activity feed for a project | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+| Method   | Endpoint                            | Description                                                 | Status                                             |
+| :------- | :---------------------------------- | :---------------------------------------------------------- | :------------------------------------------------- |
+| `POST`   | `/api/projects`                     | Create a new project                                        | <p style="color:green; font-weight:bold;">DONE</p> |
+| `GET`    | `/api/projects`                     | Get all projects owned or member-associated by current user | <p style="color:green; font-weight:bold;">DONE</p> |
+| `GET`    | `/api/projects/:projectId`          | Get details of a specific project                           | <p style="color:green; font-weight:bold;">DONE</p> |
+| `PUT`    | `/api/projects/:projectId`          | Update project details (Owner only)                         | <p style="color:green; font-weight:bold;">DONE</p> |
+| `DELETE` | `/api/projects/:projectId`          | Delete/archive a project (Owner only)                       | <p style="color:blue; font-weight:bold;">TODO</p>  |
+| `GET`    | `/api/projects/:projectId/teams`    | Get all teams under a project                               | <p style="color:blue; font-weight:bold;">TODO</p>  |
+| `GET`    | `/api/projects/:projectId/tasks`    | Get all tasks under a project (aggregate from teams)        | <p style="color:blue; font-weight:bold;">TODO</p>  |
+| `GET`    | `/api/projects/:projectId/activity` | Get activity feed for a project                             | <p style="color:blue; font-weight:bold;">TODO</p>  |
 
 ---
 
 ## Team Routes (`/api/teams/[...]`)
-| Method | Endpoint | Description | Status |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/teams` | Create a new team | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/teams` | Get all teams current user is member of | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/teams/:teamId` | Get a specific team's details | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT` | `/api/teams/:teamId` | Update team details (Admin only) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `DELETE` | `/api/teams/:teamId` | Delete a team (Owner only) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/teams/:teamId/members` | Get all members of a team | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `POST` | `/api/teams/:teamId/invites` | Invite a user to a team (email) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/teams/:teamId/invites` | Get pending invites for a team | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `DELETE` | `/api/teams/:teamId/invites/:inviteId` | Cancel an invite | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `POST` | `/api/teams/invites/:token/accept` | Accept a team invite (via email token) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `POST` | `/api/teams/invites/:token/decline` | Decline a team invite | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT` | `/api/teams/:teamId/members/:userId` | Update a member's role (Admin only) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `DELETE` | `/api/teams/:teamId/members/:userId` | Remove a member from the team (Admin only) | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+| Method | Endpoint                                 | Description                             | Status                                             |
+| :----- | :--------------------------------------- | :-------------------------------------- | :------------------------------------------------- |
+| `POST` | `/api/teams/create-team`                 | Create a new team                       | <p style="color:green; font-weight:bold;">DONE</p> |
+| `GET`  | `/api/teams/get-teams`                   | Get all teams current user is member of | <p style="color:green; font-weight:bold;">DONE</p> |
+| `GET`  | `/api/teams/get-team-by-id/:[teamId]`    | Get a specific team's details           | <p style="color:green; font-weight:bold;">DONE</p> |
+| `PUT`  | `/api/teams/update-team-by-id/:[teamId]` | Update team details (Admin only)        | <p style="color:green; font-weight:bold;">DONE</p> |
 
 ---
 
 ## Task Routes (`/api/teams/:teamId/tasks/[...]`)
-| Method | Endpoint | Description | Status |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/teams/:teamId/tasks` | Create a new task in a team | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/teams/:teamId/tasks` | Get all tasks for a team (with filters) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/teams/:teamId/tasks/:taskId` | Get a specific task's details | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT` | `/api/teams/:teamId/tasks/:taskId` | Update a task | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `DELETE` | `/api/teams/:teamId/tasks/:taskId` | Delete a task | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT` | `/api/teams/:teamId/tasks/:taskId/status` | Update task status (e.g., move on Kanban) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT` | `/api/teams/:teamId/tasks/:taskId/assign` | Assign/unassign a task to a user | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+| Method   | Endpoint                                  | Description                               | Status                                            |
+| :------- | :---------------------------------------- | :---------------------------------------- | :------------------------------------------------ |
+| `POST`   | `/api/teams/:teamId/tasks`                | Create a new task in a team               | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET`    | `/api/teams/:teamId/tasks`                | Get all tasks for a team (with filters)   | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET`    | `/api/teams/:teamId/tasks/:taskId`        | Get a specific task's details             | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `PUT`    | `/api/teams/:teamId/tasks/:taskId`        | Update a task                             | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `DELETE` | `/api/teams/:teamId/tasks/:taskId`        | Delete a task                             | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `PUT`    | `/api/teams/:teamId/tasks/:taskId/status` | Update task status (e.g., move on Kanban) | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `PUT`    | `/api/teams/:teamId/tasks/:taskId/assign` | Assign/unassign a task to a user          | <p style="color:blue; font-weight:bold;">TODO</p> |
 
 ---
 
 ## Comment Routes (`/api/teams/:teamId/tasks/:taskId/comments/[...]`)
-| Method | Endpoint | Description | Status |
-| :--- | :--- | :--- | :--- |
-| `POST` | `.../comments` | Add a comment to a task | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `.../comments` | Get all comments for a task | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT` | `.../comments/:commentId` | Edit a comment | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `DELETE` | `.../comments/:commentId` | Delete a comment | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+| Method   | Endpoint                  | Description                 | Status                                            |
+| :------- | :------------------------ | :-------------------------- | :------------------------------------------------ |
+| `POST`   | `.../comments`            | Add a comment to a task     | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET`    | `.../comments`            | Get all comments for a task | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `PUT`    | `.../comments/:commentId` | Edit a comment              | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `DELETE` | `.../comments/:commentId` | Delete a comment            | <p style="color:blue; font-weight:bold;">TODO</p> |
 
 ---
 
 ## Attachment Routes (`/api/teams/:teamId/tasks/:taskId/attachments/[...]`)
-| Method | Endpoint | Description | Status |
-| :--- | :--- | :--- | :--- |
-| `POST` | `.../attachments` | Upload a file to a task | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `.../attachments` | Get all attachments for a task | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `DELETE` | `.../attachments/:attachmentId` | Delete an attachment | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+| Method   | Endpoint                        | Description                    | Status                                            |
+| :------- | :------------------------------ | :----------------------------- | :------------------------------------------------ |
+| `POST`   | `.../attachments`               | Upload a file to a task        | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET`    | `.../attachments`               | Get all attachments for a task | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `DELETE` | `.../attachments/:attachmentId` | Delete an attachment           | <p style="color:blue; font-weight:bold;">TODO</p> |
 
 ---
 
 ## Activity & Notification Routes (`/api/[...]`)
-| Method | Endpoint | Description | Status |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/teams/:teamId/activity` | Get recent activity for a team | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET` | `/api/me/activity` | Get current user's global activity feed | <p style="color:blue; font-weight:bold;">TODO</p> |
+
+| Method | Endpoint                      | Description                             | Status                                            |
+| :----- | :---------------------------- | :-------------------------------------- | :------------------------------------------------ |
+| `GET`  | `/api/teams/:teamId/activity` | Get recent activity for a team          | <p style="color:blue; font-weight:bold;">TODO</p> |
+| `GET`  | `/api/me/activity`            | Get current user's global activity feed | <p style="color:blue; font-weight:bold;">TODO</p> |
 
 ---
-
-## Summary of Route Structure
-
-Your API structure will look like this in the `app/api/` directory:
-
-```
-app/api/
-├── auth/
-│   ├── register/route.ts
-│   ├── login/route.ts
-│   ├── logout/route.ts
-│   ├── me/route.ts
-│   └── ...
-├── users/
-│   ├── route.ts          # GET /api/users
-│   ├── [userId]/route.ts # GET /api/users/:userId
-│   └── me/
-│       ├── teams/route.ts
-│       ├── tasks/route.ts
-│       └── notifications/route.ts
-├── teams/
-│   ├── route.ts                      # GET, POST /api/teams
-│   ├── [teamId]/
-│   │   ├── route.ts                  # GET, PUT, DELETE /api/teams/:teamId
-│   │   ├── members/
-│   │   │   ├── route.ts              # GET /api/teams/:teamId/members
-│   │   │   └── [userId]/route.ts     # PUT, DELETE /api/teams/:teamId/members/:userId
-│   │   ├── invites/
-│   │   │   ├── route.ts              # GET, POST /api/teams/:teamId/invites
-│   │   │   └── [inviteId]/route.ts   # DELETE /api/teams/:teamId/invites/:inviteId
-│   │   └── tasks/
-│   │       ├── route.ts              # GET, POST /api/teams/:teamId/tasks
-│   │       └── [taskId]/
-│   │           ├── route.ts          # GET, PUT, DELETE /api/teams/:teamId/tasks/:taskId
-│   │           ├── comments/
-│   │           │   ├── route.ts
-│   │           │   └── [commentId]/route.ts
-│   │           └── attachments/
-│   │               ├── route.ts
-│   │               └── [attachmentId]/route.ts
-│   └── invites/
-│       └── [token]/
-│           ├── accept/route.ts
-│           └── decline/route.ts
-└── me/
-    ├── notifications/route.ts
-    └── activity/route.ts
-```
-
-**Priority Order for Implementation (MVP First):**
-1.  Auth Routes (`/api/auth/*`)
-2.  Team Routes (`/api/teams`, `/api/teams/[teamId]`)
-3.  Task Routes (`/api/teams/[teamId]/tasks`)
-4.  Comment Routes
-5.  Invite & Member Routes
-6.  The rest (Attachments, Activity, etc.)
-
-
-
-
-
 
 <hr>
 
@@ -415,26 +362,25 @@ flowchart TD
         Activity
     end
 ```
+
 `
 
-Reference code you can take a look to know how i am creating the api in nextjs : `// app/api/auth/me/route.ts
+Reference code you can take a look to know how i am creating the api in nextjs : `
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { ApiResponse } from "@/interface/api.interface";
 import {
 	TranslationEnum,
 	TranslationErrorEnum,
 } from "@/interface/translation-enums";
-import {
-	TokenPayload,
-	withTokenValidation,
-} from "@/middleware/cookie-validate.middleware";
-import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
-import { validateEmail } from "@/lib/validator";
-import { ApiResponse } from "@/interface/api.interface";
-import { NextRequest, NextResponse } from "next/server";
+import { withTokenValidation } from "@/middleware/cookie-validate.middleware";
 import { withRequestTiming } from "@/middleware/timestamp.middleware";
+import { TokenPayload } from "@/middleware/cookie-validate.middleware";
+import { CreateTeamRequest } from "@/interface/team.interface"; // Fixed import
 
-async function meHandler(request: NextRequest, payload?: TokenPayload) {
+async function createTeamHandler(request: NextRequest, payload?: TokenPayload) {
 	try {
+		// Check authentication
 		if (!payload) {
 			const response: ApiResponse = {
 				message: TranslationErrorEnum.UNAUTHORIZED,
@@ -444,24 +390,42 @@ async function meHandler(request: NextRequest, payload?: TokenPayload) {
 			return NextResponse.json(response, { status: 401 });
 		}
 
-		console.log(payload, "PAYLOAD");
+		// Parse request body
+		const body: CreateTeamRequest = await request.json();
+		const { name, description, projectId } = body;
 
-		// Get user from database
+		// Validate required fields
+		if (!name || !name.trim()) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
+				statusCode: 400,
+				error: "Validation Error",
+			};
+			return NextResponse.json(response, { status: 400 });
+		}
+
+		if (!projectId) {
+			const response: ApiResponse = {
+				message: "Project ID is required",
+				statusCode: 400,
+				error: "Validation Error",
+			};
+			return NextResponse.json(response, { status: 400 });
+		}
+
+		// Validate team name length
+		if (name.trim().length < 3) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.TEAM_NAME_MIN_LENGTH,
+				statusCode: 400,
+				error: "Validation Error",
+			};
+			return NextResponse.json(response, { status: 400 });
+		}
+
+		// Check if user exists and is active
 		const user = await prisma.user.findUnique({
-			where: { id: payload.id },
-			select: {
-				id: true,
-				firstName: true,
-				lastName: true,
-				username: true,
-				email: true,
-				avatar: true,
-				isVerified: true,
-				isActive: true,
-				createdAt: true,
-				updatedAt: true,
-				lastLogin: true,
-			},
+			where: { id: payload.id, isActive: true },
 		});
 
 		if (!user) {
@@ -473,252 +437,99 @@ async function meHandler(request: NextRequest, payload?: TokenPayload) {
 			return NextResponse.json(response, { status: 404 });
 		}
 
-		if (!user.isActive) {
-			const response: ApiResponse = {
-				message: TranslationErrorEnum.USER_DEACTIVATED,
-				statusCode: 403,
-				error: "Account Error",
-			};
-			return NextResponse.json(response, { status: 403 });
-		}
-
-		// Create success response
-		const response: ApiResponse = {
-			message: TranslationEnum.USER_PROFILE_RETRIEVED,
-			statusCode: 200,
-			data: user,
-		};
-
-		return NextResponse.json(response, { status: 200 });
-	} catch (error: any) {
-		console.error("Get user profile error:", error);
-
-		const response: ApiResponse = {
-			message: TranslationErrorEnum.INTERNAL_SERVER_ERROR,
-			statusCode: 500,
-			error: "Profile Error",
-			errors: error.message ? [error.message] : undefined,
-		};
-
-		return NextResponse.json(response, { status: 500 });
-	}
-}
-
-async function updateMeHandler(request: NextRequest, payload?: TokenPayload) {
-	try {
-		if (!payload) {
-			const response: ApiResponse = {
-				message: TranslationErrorEnum.UNAUTHORIZED,
-				statusCode: 401,
-				error: "Authentication Error",
-			};
-			return NextResponse.json(response, { status: 401 });
-		}
-
-		const body = await request.json();
-		const {
-			firstName,
-			lastName,
-			username,
-			email,
-			avatar,
-			currentPassword,
-			newPassword,
-		} = body;
-
-		// Check if user exists and is active
-		const existingUser = await prisma.user.findUnique({
-			where: { id: payload.id },
+		// Verify that the project exists and user owns it
+		const project = await prisma.project.findFirst({
+			where: {
+				id: projectId,
+				ownerId: payload.id,
+			},
 		});
 
-		if (!existingUser) {
+		if (!project) {
 			const response: ApiResponse = {
-				message: TranslationErrorEnum.USER_DOES_NOT_EXIST,
+				message: TranslationErrorEnum.PROJECT_NOT_FOUND,
 				statusCode: 404,
-				error: "User Error",
+				error: "Project Error",
 			};
 			return NextResponse.json(response, { status: 404 });
 		}
 
-		if (!existingUser.isActive) {
-			const response: ApiResponse = {
-				message: TranslationErrorEnum.USER_DEACTIVATED,
-				statusCode: 403,
-				error: "Account Error",
-			};
-			return NextResponse.json(response, { status: 403 });
-		}
-
-		// Prepare update data
-		const updateData: any = {};
-
-		// Validate and set basic fields
-		if (firstName !== undefined) {
-			if (!firstName.trim()) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-			updateData.firstName = firstName.trim();
-		}
-
-		if (lastName !== undefined) {
-			if (!lastName.trim()) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-			updateData.lastName = lastName.trim();
-		}
-
-		if (username !== undefined) {
-			if (!username.trim()) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-
-			// Check if username is already taken by another user
-			const existingUsername = await prisma.user.findFirst({
-				where: {
-					username: username.trim(),
-					id: { not: payload.id },
-				},
-			});
-
-			if (existingUsername) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.USERNAME_ALREADY_EXISTS,
-					statusCode: 409,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 409 });
-			}
-
-			updateData.username = username.trim();
-		}
-
-		if (email !== undefined) {
-			if (!email.trim()) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.EMAIL_IS_REQUIRED,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-
-			if (!validateEmail(email)) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.INVALID_EMAIL_FORMAT,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-
-			// Check if email is already taken by another user
-			const existingEmail = await prisma.user.findFirst({
-				where: {
-					email: email.trim(),
-					id: { not: payload.id },
-				},
-			});
-
-			if (existingEmail) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.EMAIL_ALREADY_EXISTS,
-					statusCode: 409,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 409 });
-			}
-
-			updateData.email = email.trim();
-			// If email is changed, mark as unverified and generate new OTP
-			if (email !== existingUser.email) {
-				const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
-				updateData.isVerified = false;
-				updateData.otp = otp;
-				updateData.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-				// TODO: Send verification email here
-			}
-		}
-
-		if (avatar !== undefined) {
-			updateData.avatar = avatar;
-		}
-
-		// Handle password change
-		if (newPassword) {
-			if (!currentPassword) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.CURRENT_PASSWORD_REQUIRED,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-
-			// Verify current password
-			const isCurrentPasswordValid = await bcrypt.compare(
-				currentPassword,
-				existingUser.password
-			);
-			if (!isCurrentPasswordValid) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.INVALID_CURRENT_PASSWORD,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-
-			// Hash new password
-			updateData.password = await bcrypt.hash(newPassword, 12);
-		}
-
-		// Update user
-		const updatedUser = await prisma.user.update({
-			where: { id: payload.id },
-			data: updateData,
-			select: {
-				id: true,
-				firstName: true,
-				lastName: true,
-				username: true,
-				email: true,
-				avatar: true,
-				isVerified: true,
-				isActive: true,
-				createdAt: true,
-				updatedAt: true,
+		// Check if team with same name already exists in this project
+		const existingTeam = await prisma.team.findFirst({
+			where: {
+				name: name.trim(),
+				projectId: projectId,
 			},
 		});
 
+		if (existingTeam) {
+			const response: ApiResponse = {
+				message:
+					TranslationErrorEnum.TEAM_NAME_ALREADY_EXISTS_IN_PROJECT,
+				statusCode: 409,
+				error: "Validation Error",
+			};
+			return NextResponse.json(response, { status: 409 });
+		}
+
+		// Create the team and add the creator as an ADMIN member
+		const team = await prisma.team.create({
+			data: {
+				name: name.trim(),
+				description: description?.trim(),
+				ownerId: payload.id,
+				projectId: projectId,
+				members: {
+					create: {
+						userId: payload.id,
+						role: "ADMIN", // Creator becomes ADMIN
+					},
+				},
+			},
+			select: {
+				id: true,
+				name: true,
+				description: true,
+				createdAt: true,
+				updatedAt: true,
+				owner: {
+					select: {
+						id: true,
+						firstName: true,
+						lastName: true,
+						username: true,
+						email: true,
+					},
+				},
+			},
+		});
+
+		// Create activity log
+		await prisma.activity.create({
+			data: {
+				action: "CREATE_TEAM",
+				details: `Created team: ${team.name} in project ${project.name}`,
+				userId: payload.id,
+				teamId: team.id,
+				projectId: projectId,
+			},
+		});
+
+		// Success response - USING TRANSLATION ENUM
 		const response: ApiResponse = {
-			message: TranslationEnum.USER_PROFILE_UPDATED,
-			statusCode: 200,
-			data: updatedUser,
+			message: TranslationEnum.TEAM_CREATED_SUCCESSFULLY,
+			statusCode: 201,
+			data: team,
 		};
 
-		return NextResponse.json(response, { status: 200 });
+		return NextResponse.json(response, { status: 201 });
 	} catch (error: any) {
-		console.error("Update user profile error:", error);
+		console.error("Create team error:", error);
 
 		const response: ApiResponse = {
 			message: TranslationErrorEnum.INTERNAL_SERVER_ERROR,
 			statusCode: 500,
-			error: "Update Error",
+			error: "Team Creation Error",
 			errors: error.message ? [error.message] : undefined,
 		};
 
@@ -726,12 +537,10 @@ async function updateMeHandler(request: NextRequest, payload?: TokenPayload) {
 	}
 }
 
-// Apply token validation middleware
-const wrappedGetHandler = withTokenValidation(meHandler);
-const wrappedPutHandler = withTokenValidation(updateMeHandler);
+// Apply middleware
+const wrappedHandler = withTokenValidation(createTeamHandler);
 
-export const GET = withRequestTiming(wrappedGetHandler);
-export const PUT = withRequestTiming(wrappedPutHandler);
+export const POST = withRequestTiming(wrappedHandler);
 `
 
 

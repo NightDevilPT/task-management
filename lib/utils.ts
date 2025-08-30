@@ -1,11 +1,47 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { ITeamRole } from "@/interface/team-invite.interface";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+	return twMerge(clsx(inputs));
 }
 
 export function generateOtp(): number {
 	// Generate a 6-digit OTP as a string
 	return Math.floor(100000 + Math.random() * 900000);
+}
+
+// lib/utils.ts - Add this function
+export function generateInviteToken(
+	email: string,
+	teamId: string,
+	role: ITeamRole
+): string {
+	// Create a token that contains email, teamId, role, and expiry info
+	const tokenData = {
+		email: email.toLowerCase(),
+		teamId,
+		role,
+		timestamp: Date.now(),
+	};
+
+	// Base64 encode the token data
+	const tokenString = JSON.stringify(tokenData);
+	return Buffer.from(tokenString).toString("base64url");
+}
+
+export function decodeInviteToken(
+	token: string
+): {
+	email: string;
+	teamId: string;
+	role: ITeamRole;
+	timestamp: number;
+} | null {
+	try {
+		const decodedString = Buffer.from(token, "base64url").toString("utf-8");
+		return JSON.parse(decodedString);
+	} catch (error) {
+		return null;
+	}
 }

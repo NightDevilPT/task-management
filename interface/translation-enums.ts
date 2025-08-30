@@ -20,6 +20,7 @@ export enum TranslationEnum {
 	TEAM_CREATED_SUCCESSFULLY = "teamCreatedSuccessfully",
 	TEAMS_RETRIEVED_SUCCESSFULLY = "teamsRetrievedSuccessfully",
 	TEAM_UPDATED_SUCCESSFULLY = "teamUpdatedSuccessfully",
+	INVITE_SENT_SUCCESSFULLY = "inviteSentSuccessfully",
 }
 
 export enum TranslationErrorEnum {
@@ -62,4 +63,11 @@ export enum TranslationErrorEnum {
 	TEAM_NOT_FOUND = "teamsNotFound",
 	TEAM_ACCESS_DENIED = "youDoNotHaveAccessToThisTeam",
 	TEAM_NAME_MIN_LENGTH = "teamNameMinLength",
+	UNAUTHORIZED_TEAM_ACCESS = "unauthorizedTeamAccess",
+	INVITE_ALREADY_SENT = "inviteAlreadySent",
+	USER_ALREADY_TEAM_MEMBER = "userAlreadyTeamMember",
+	INVALID_ROLE = "invalidRole",
+	INVALID_INVITE_TOKEN = "invalidInviteToken",
+	EMAIL_MISMATCH_INVITE = "emailMismatchInvite",
+	INVITE_NOT_FOUND_OR_EXPIRED = "inviteNotFoundOrExpired",
 }

@@ -1,17 +1,17 @@
 // app/api/auth/register/route.ts
 import "@/lib/cqrs/setup";
-import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import { validateEmail, validatePasswordWithErrors } from "@/lib/validator";
-import { generateOtp } from "@/lib/utils";
 import {
 	TranslationEnum,
 	TranslationErrorEnum,
 } from "@/interface/translation-enums";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import { generateOtp } from "@/lib/utils";
+import { eventBus } from "@/lib/cqrs/event-bus";
 import { ApiResponse } from "@/interface/api.interface";
 import { NextRequest, NextResponse } from "next/server";
 import { withRequestTiming } from "@/middleware/timestamp.middleware";
-import { eventBus } from "@/lib/cqrs/event-bus";
+import { validateEmail, validatePasswordWithErrors } from "@/lib/validator";
 import { UserRegisteredEvent } from "@/lib/events/users/impl/user-registered.event";
 
 async function registerHandler(request: NextRequest) {
