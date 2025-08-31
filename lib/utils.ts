@@ -1,6 +1,7 @@
-import { ITeamRole } from "@/interface/team-invite.interface";
-import { clsx, type ClassValue } from "clsx";
+import { TeamRole } from "./permission";
 import { twMerge } from "tailwind-merge";
+import { clsx, type ClassValue } from "clsx";
+import { ITeamRole } from "@/interface/team-invite.interface";
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -44,4 +45,13 @@ export function decodeInviteToken(
 	} catch (error) {
 		return null;
 	}
+}
+
+export function getHighestRole(roles: TeamRole[]): TeamRole {
+	if (roles.includes(TeamRole.ADMIN)) {
+		return TeamRole.ADMIN;
+	} else if (roles.includes(TeamRole.MANAGER)) {
+		return TeamRole.MANAGER;
+	}
+	return TeamRole.MEMBER;
 }

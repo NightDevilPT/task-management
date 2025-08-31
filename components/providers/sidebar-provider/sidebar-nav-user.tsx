@@ -16,7 +16,8 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
-import { CreditCard, DotIcon, LogOutIcon, UserCircle } from "lucide-react";
+import { HiDotsVertical } from "react-icons/hi";
+import { CreditCard, LogOutIcon, UserCircle } from "lucide-react";
 import { MdNotificationImportant } from "react-icons/md";
 
 export function NavUser({
@@ -56,7 +57,7 @@ export function NavUser({
 									{user.email}
 								</span>
 							</div>
-							<DotIcon className="ml-auto size-4" />
+							<HiDotsVertical className="ml-auto size-4" />
 						</SidebarMenuButton>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent

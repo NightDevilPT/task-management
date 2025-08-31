@@ -12,11 +12,14 @@ import {
 	SidebarMenuItem,
 	SidebarProvider,
 } from "@/components/ui/sidebar";
-import { GemIcon } from "lucide-react";
+import { BookOpenCheck, GemIcon } from "lucide-react";
 import { NavMain } from "./sidebar-nav";
 import { navMain } from "@/routes/nav.route";
 import { NavUser } from "./sidebar-nav-user";
 import { user } from "@/data/user-dummy.data";
+import Header from "./sidebar-header";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	return (
@@ -32,32 +35,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				<SidebarHeader>
 					<SidebarMenu>
 						<SidebarMenuItem>
-							<SidebarMenuButton
-								asChild
-								className="data-[slot=sidebar-menu-button]:!p-1.5"
-							>
-								<a href="#">
-									<GemIcon className="!size-5" />
-									<span className="text-base font-semibold">
-										Acme Inc.
-									</span>
-								</a>
-							</SidebarMenuButton>
+							<div className="flex justify-start gap-4 py-2 items-center">
+								<BookOpenCheck className="!size-5" />
+								<span className="text-base font-semibold">
+									Task management
+								</span>
+							</div>
 						</SidebarMenuItem>
 					</SidebarMenu>
 				</SidebarHeader>
-				<SidebarContent>
+				<Separator />
+				<SidebarContent className="py-2">
 					<NavMain items={navMain} />
 				</SidebarContent>
+				<Separator />
 				<SidebarFooter>
 					<NavUser user={user} />
 				</SidebarFooter>
 			</Sidebar>
-			<SidebarInset>
-				<div className="w-full h-20">
-					
-				</div>
-				{props.children}</SidebarInset>
+			<SidebarInset className="overflow-hidden h-full">
+				<SidebarHeader className="h-16">
+					<Header />
+					<Separator />
+				</SidebarHeader>
+				<ScrollArea className="w-full px-5 h-[calc(100vh-5rem)] overflow-y-auto">
+					{props.children}
+				</ScrollArea>
+			</SidebarInset>
 		</SidebarProvider>
 	);
 }

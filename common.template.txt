@@ -1,5 +1,6 @@
 Hi i am full stack developer and having one project name is Task Management System.
-Prisma Schema : `generator client {
+Prisma Schema : `
+generator client {
   provider = "prisma-client-js"
 }
 
@@ -25,6 +26,21 @@ enum ProjectStatus {
   ARCHIVED
   COMPLETED
   ON_HOLD
+}
+
+enum TaskStatusEnum {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+  BLOCKED
+}
+
+enum TaskPriorityEnum {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
 
 model User {
@@ -135,8 +151,8 @@ model Task {
   id          String   @id @default(cuid())
   title       String
   description String?
-  status      String   @default("TODO")
-  priority    String   @default("MEDIUM")
+  status      TaskStatusEnum   @default(TODO)
+  priority    TaskPriorityEnum   @default(MEDIUM)
   dueDate     DateTime? @map("due_date")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -221,7 +237,8 @@ model Activity {
   projectId String?
   
   @@map("activities")
-}`
+}
+`
 
 API's i want to create : `
 # Task Management System
@@ -332,6 +349,63 @@ This document lists all planned API routes for the Task Management System, organ
 
 ---
 
+## Summary of Route Structure
+
+Your API structure will look like this in the `app/api/` directory:
+
+```
+app/api/
+├── auth/
+│   ├── register/route.ts
+│   ├── login/route.ts
+│   ├── logout/route.ts
+│   ├── me/route.ts
+│   └── ...
+├── users/
+│   ├── route.ts          # GET /api/users
+│   ├── [userId]/route.ts # GET /api/users/:userId
+│   └── me/
+│       ├── teams/route.ts
+│       ├── tasks/route.ts
+│       └── notifications/route.ts
+├── teams/
+│   ├── route.ts                      # GET, POST /api/teams
+│   ├── [teamId]/
+│   │   ├── route.ts                  # GET, PUT, DELETE /api/teams/:teamId
+│   │   ├── members/
+│   │   │   ├── route.ts              # GET /api/teams/:teamId/members
+│   │   │   └── [userId]/route.ts     # PUT, DELETE /api/teams/:teamId/members/:userId
+│   │   ├── invites/
+│   │   │   ├── route.ts              # GET, POST /api/teams/:teamId/invites
+│   │   │   └── [inviteId]/route.ts   # DELETE /api/teams/:teamId/invites/:inviteId
+│   │   └── tasks/
+│   │       ├── route.ts              # GET, POST /api/teams/:teamId/tasks
+│   │       └── [taskId]/
+│   │           ├── route.ts          # GET, PUT, DELETE /api/teams/:teamId/tasks/:taskId
+│   │           ├── comments/
+│   │           │   ├── route.ts
+│   │           │   └── [commentId]/route.ts
+│   │           └── attachments/
+│   │               ├── route.ts
+│   │               └── [attachmentId]/route.ts
+│   └── invites/
+│       └── [token]/
+│           ├── accept/route.ts
+│           └── decline/route.ts
+└── me/
+    ├── notifications/route.ts
+    └── activity/route.ts
+```
+
+**Priority Order for Implementation (MVP First):**
+
+1.  Auth Routes (`/api/auth/*`)
+2.  Team Routes (`/api/teams`, `/api/teams/[teamId]`)
+3.  Task Routes (`/api/teams/[teamId]/tasks`)
+4.  Comment Routes
+5.  Invite & Member Routes
+6.  The rest (Attachments, Activity, etc.)
+
 <hr>
 
 ```mermaid
@@ -362,186 +436,6 @@ flowchart TD
         Activity
     end
 ```
-
-`
-
-Reference code you can take a look to know how i am creating the api in nextjs : `
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { ApiResponse } from "@/interface/api.interface";
-import {
-	TranslationEnum,
-	TranslationErrorEnum,
-} from "@/interface/translation-enums";
-import { withTokenValidation } from "@/middleware/cookie-validate.middleware";
-import { withRequestTiming } from "@/middleware/timestamp.middleware";
-import { TokenPayload } from "@/middleware/cookie-validate.middleware";
-import { CreateTeamRequest } from "@/interface/team.interface"; // Fixed import
-
-async function createTeamHandler(request: NextRequest, payload?: TokenPayload) {
-	try {
-		// Check authentication
-		if (!payload) {
-			const response: ApiResponse = {
-				message: TranslationErrorEnum.UNAUTHORIZED,
-				statusCode: 401,
-				error: "Authentication Error",
-			};
-			return NextResponse.json(response, { status: 401 });
-		}
-
-		// Parse request body
-		const body: CreateTeamRequest = await request.json();
-		const { name, description, projectId } = body;
-
-		// Validate required fields
-		if (!name || !name.trim()) {
-			const response: ApiResponse = {
-				message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
-				statusCode: 400,
-				error: "Validation Error",
-			};
-			return NextResponse.json(response, { status: 400 });
-		}
-
-		if (!projectId) {
-			const response: ApiResponse = {
-				message: "Project ID is required",
-				statusCode: 400,
-				error: "Validation Error",
-			};
-			return NextResponse.json(response, { status: 400 });
-		}
-
-		// Validate team name length
-		if (name.trim().length < 3) {
-			const response: ApiResponse = {
-				message: TranslationErrorEnum.TEAM_NAME_MIN_LENGTH,
-				statusCode: 400,
-				error: "Validation Error",
-			};
-			return NextResponse.json(response, { status: 400 });
-		}
-
-		// Check if user exists and is active
-		const user = await prisma.user.findUnique({
-			where: { id: payload.id, isActive: true },
-		});
-
-		if (!user) {
-			const response: ApiResponse = {
-				message: TranslationErrorEnum.USER_DOES_NOT_EXIST,
-				statusCode: 404,
-				error: "User Error",
-			};
-			return NextResponse.json(response, { status: 404 });
-		}
-
-		// Verify that the project exists and user owns it
-		const project = await prisma.project.findFirst({
-			where: {
-				id: projectId,
-				ownerId: payload.id,
-			},
-		});
-
-		if (!project) {
-			const response: ApiResponse = {
-				message: TranslationErrorEnum.PROJECT_NOT_FOUND,
-				statusCode: 404,
-				error: "Project Error",
-			};
-			return NextResponse.json(response, { status: 404 });
-		}
-
-		// Check if team with same name already exists in this project
-		const existingTeam = await prisma.team.findFirst({
-			where: {
-				name: name.trim(),
-				projectId: projectId,
-			},
-		});
-
-		if (existingTeam) {
-			const response: ApiResponse = {
-				message:
-					TranslationErrorEnum.TEAM_NAME_ALREADY_EXISTS_IN_PROJECT,
-				statusCode: 409,
-				error: "Validation Error",
-			};
-			return NextResponse.json(response, { status: 409 });
-		}
-
-		// Create the team and add the creator as an ADMIN member
-		const team = await prisma.team.create({
-			data: {
-				name: name.trim(),
-				description: description?.trim(),
-				ownerId: payload.id,
-				projectId: projectId,
-				members: {
-					create: {
-						userId: payload.id,
-						role: "ADMIN", // Creator becomes ADMIN
-					},
-				},
-			},
-			select: {
-				id: true,
-				name: true,
-				description: true,
-				createdAt: true,
-				updatedAt: true,
-				owner: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						username: true,
-						email: true,
-					},
-				},
-			},
-		});
-
-		// Create activity log
-		await prisma.activity.create({
-			data: {
-				action: "CREATE_TEAM",
-				details: `Created team: ${team.name} in project ${project.name}`,
-				userId: payload.id,
-				teamId: team.id,
-				projectId: projectId,
-			},
-		});
-
-		// Success response - USING TRANSLATION ENUM
-		const response: ApiResponse = {
-			message: TranslationEnum.TEAM_CREATED_SUCCESSFULLY,
-			statusCode: 201,
-			data: team,
-		};
-
-		return NextResponse.json(response, { status: 201 });
-	} catch (error: any) {
-		console.error("Create team error:", error);
-
-		const response: ApiResponse = {
-			message: TranslationErrorEnum.INTERNAL_SERVER_ERROR,
-			statusCode: 500,
-			error: "Team Creation Error",
-			errors: error.message ? [error.message] : undefined,
-		};
-
-		return NextResponse.json(response, { status: 500 });
-	}
-}
-
-// Apply middleware
-const wrappedHandler = withTokenValidation(createTeamHandler);
-
-export const POST = withRequestTiming(wrappedHandler);
-`
-
+```
 
 Please memorize this all the code in you memory so i can proceed the development with you

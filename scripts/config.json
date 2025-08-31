@@ -1,0 +1,10 @@
+{
+	"inputDir": ".\\app\\api",
+	"outputListPath": ".\\files_list.txt",
+	"outputCodePath": ".\\files_code.txt",
+	"includeExtensions": [".js", ".ts", ".json", ".md", ".txt"],
+	"excludeDirs": ["node_modules", ".git", "dist", "build"],
+	"excludeGlobs": [],
+	"maxFileSize": 1048576,
+	"encoding": "utf8"
+}

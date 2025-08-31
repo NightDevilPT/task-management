@@ -13,7 +13,7 @@ const RootProvider = ({ children }: { children: ReactNode }) => {
 				enableSystem
 				disableTransitionOnChange
 			>
-				<AppSidebar>{children}</AppSidebar>
+				<AppSidebar variant="inset">{children}</AppSidebar>
 			</ThemeProvider>
 		</React.Fragment>
 	);

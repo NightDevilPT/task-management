@@ -16,6 +16,8 @@ export enum TranslationEnum {
 	PROJECT_CREATED_SUCCESSFULLY = "projectCreatedSuccessfully",
 	PROJECTS_RETRIEVED_SUCCESSFULLY = "projectsRetrievedSuccessfully",
 	PROJECT_UPDATED_SUCCESSFULLY = "projectUpdatedSuccessfully",
+	OTP_RESENT_SUCCESSFULLY = "otpResentSuccessfully",
+	USER_ALREADY_VERIFIED = "userAlreadyVerified",
 
 	TEAM_CREATED_SUCCESSFULLY = "teamCreatedSuccessfully",
 	TEAMS_RETRIEVED_SUCCESSFULLY = "teamsRetrievedSuccessfully",
@@ -57,9 +59,12 @@ export enum TranslationErrorEnum {
 	CURRENT_PASSWORD_REQUIRED = "currentPasswordRequired",
 	EMAIL_ALREADY_EXISTS = "emailAlreadyExists",
 	USERNAME_ALREADY_EXISTS = "usernameAlreadyExists",
+	USER_NOT_FOUND = "User not found",
 
 	// Project Api Error Message
 	PROJECT_NOT_FOUND = "projectNotFound",
+	PROJECT_NAME_TOO_SHORT = "projectNameTooShort",
+	PROJECT_ID_REQUIRED = "projectIdRequired",
 
 	// Team Api Error Message
 	TEAM_NAME_ALREADY_EXISTS_IN_PROJECT = "teamNameAlreadyExistsInProject",
