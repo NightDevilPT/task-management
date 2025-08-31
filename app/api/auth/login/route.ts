@@ -1,15 +1,14 @@
 // app/api/auth/login/route.ts
-import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 import {
 	TranslationEnum,
 	TranslationErrorEnum,
 } from "@/interface/translation-enums";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import jwtService from "@/services/jwt.service";
 import { ApiResponse } from "@/interface/api.interface";
 import { NextRequest, NextResponse } from "next/server";
 import { withRequestTiming } from "@/middleware/timestamp.middleware";
-import jwtService from "@/services/jwt.service";
-import { cookies } from "next/headers";
 
 async function loginHandler(request: NextRequest) {
 	try {

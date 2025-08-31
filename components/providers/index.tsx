@@ -1,8 +1,9 @@
 "use client";
 
 import React, { ReactNode } from "react";
-import { ThemeProvider } from "./theme-provider";
 import { AppSidebar } from "./sidebar-provider";
+import { ThemeProvider } from "./theme-provider";
+import { LanguageProvider } from "./language-provider";
 
 const RootProvider = ({ children }: { children: ReactNode }) => {
 	return (
@@ -13,7 +14,9 @@ const RootProvider = ({ children }: { children: ReactNode }) => {
 				enableSystem
 				disableTransitionOnChange
 			>
-				<AppSidebar variant="inset">{children}</AppSidebar>
+				<LanguageProvider>
+					{children}
+				</LanguageProvider>
 			</ThemeProvider>
 		</React.Fragment>
 	);

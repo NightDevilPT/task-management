@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
 	Sidebar,
 	SidebarContent,
@@ -8,18 +7,18 @@ import {
 	SidebarHeader,
 	SidebarInset,
 	SidebarMenu,
-	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarProvider,
 } from "@/components/ui/sidebar";
-import { BookOpenCheck, GemIcon } from "lucide-react";
+import * as React from "react";
+import Header from "./sidebar-header";
 import { NavMain } from "./sidebar-nav";
+import { BookOpenCheck } from "lucide-react";
 import { navMain } from "@/routes/nav.route";
 import { NavUser } from "./sidebar-nav-user";
 import { user } from "@/data/user-dummy.data";
-import Header from "./sidebar-header";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	return (

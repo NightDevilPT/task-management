@@ -1,6 +1,5 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -17,8 +16,9 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { HiDotsVertical } from "react-icons/hi";
-import { CreditCard, LogOutIcon, UserCircle } from "lucide-react";
 import { MdNotificationImportant } from "react-icons/md";
+import { CreditCard, LogOutIcon, UserCircle } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function NavUser({
 	user,

@@ -1,0 +1,66 @@
+{
+	"welcome": "Welcome to our application!",
+	"general": {
+		"firstname": "First Name",
+		"lastname": "Last Name",
+		"email": "Email",
+		"username": "Username",
+		"password": "Password",
+		"emailplaceholder": "m@gmail.com",
+		"passwordplaceholder": "Enter your password",
+		"signup": "Sign Up",
+		"login": "Log In",
+		"alreadyHaveAnAccount": "Already have an account?",
+		"dontHaveAnAccount": "Don't have an account?"
+	},
+	"success": {
+		"userCreatedVerificationEmailSent": "User created successfully. Verification email sent.",
+		"userVerifiedSuccessfully": "User verified successfully.",
+		"userLoggedInSuccessfully": "User logged in successfully.",
+		"userLoggedOutSuccessfully": "User logged out successfully.",
+		"otpSentForPasswordReset": "OTP sent for password reset.",
+		"passwordUpdatedSuccessfully": "Password updated successfully.",
+		"verificationMailSent": "Verification mail sent.",
+		"loginSuccessful": "Login successful.",
+		"logoutSuccessful": "Logout successful.",
+		"userProfileRetrieved": "User profile retrieved successfully.",
+		"passwordResetEmailSent": "Password reset email sent.",
+		"passwordResetSuccessful": "Password reset successful.",
+		"userProfileUpdated": "User profile updated successfully."
+	},
+	"errors": {
+		"general": {
+			"internalServerError": "Internal server error. Please try again later.",
+			"allFieldsAreRequired": "All fields are required.",
+			"invalidOtp": "Invalid OTP.",
+			"otpExpired": "OTP has expired.",
+			"sessionExpired": "Session has expired. Please log in again.",
+			"unauthorized": "Unauthorized access.",
+			"invalidInput": "Invalid input provided.",
+			"forbidden": "Access forbidden."
+		},
+		"user": {
+			"emailIsRequired": "Email is required.",
+			"invalidEmailFormat": "Invalid email format.",
+			"userAlreadyExists": "User already exists.",
+			"userCreatedSuccessfully": "User created successfully.",
+			"passwordTooWeak": "Password is too weak.",
+			"passwordMustBeAtLeast8Characters": "Password must be at least 8 characters long.",
+			"passwordMustContainsAtLeastOneLowercaseLetter": "Password must contain at least one lowercase letter.",
+			"passwordMustContainAtLeastOneUppercaseLetter": "Password must contain at least one uppercase letter.",
+			"passwordMustContainAtLeastOneDigit": "Password must contain at least one digit.",
+			"passwordMustContainAtLeastOneSpecialCharacter": "Password must contain at least one special character.",
+			"userDoesNotExist": "User does not exist.",
+			"userAlreadyVerified": "User is already verified.",
+			"userNotVerified": "User is not verified. Please verify your email first.",
+			"invalidCredentials": "Invalid credentials.",
+			"invalidOrExpiredOtp": "Invalid or expired OTP.",
+			"userDeactivated": "User account has been deactivated.",
+			"invalidCurrentPassword": "Invalid current password.",
+			"currentPasswordRequired": "Current password is required.",
+			"emailAlreadyExists": "Email already exists.",
+			"usernameAlreadyExists": "Username already exists.",
+			"userNotFound": "User not found."
+		}
+	}
+}

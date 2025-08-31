@@ -1,0 +1,70 @@
+{
+	"welcome": "¡Bienvenido a nuestra aplicación!",
+	"general": {
+		"firstname": "Nombre",
+		"lastname": "Apellido",
+		"email": "Email",
+		"username": "Nombre de usuario",
+		"password": "Contraseña",
+		"emailplaceholder": "m@gmail.com",
+		"passwordplaceholder": "Ingrese su contraseña",
+		"signup": "Regístrate",
+		"login": "Iniciar sesión",
+		"alreadyHaveAnAccount": "¿Ya tienes una cuenta?",
+		"dontHaveAnAccount": "¿No tienes una cuenta?"
+	},
+	"signup": {
+		"title": "Únete a la gestión de tareas. Hoy",
+		"creatingAccount": "Creando cuenta..."
+	},
+	"success": {
+		"userCreatedVerificationEmailSent": "Usuario creado exitosamente. Email de verificación enviado.",
+		"userVerifiedSuccessfully": "Usuario verificado exitosamente.",
+		"userLoggedInSuccessfully": "Usuario inició sesión exitosamente.",
+		"userLoggedOutSuccessfully": "Usuario cerró sesión exitosamente.",
+		"otpSentForPasswordReset": "OTP enviado para restablecer contraseña.",
+		"passwordUpdatedSuccessfully": "Contraseña actualizada exitosamente.",
+		"verificationMailSent": "Correo de verificación enviado.",
+		"loginSuccessful": "Inicio de sesión exitoso.",
+		"logoutSuccessful": "Cierre de sesión exitoso.",
+		"userProfileRetrieved": "Perfil de usuario recuperado exitosamente.",
+		"passwordResetEmailSent": "Email de restablecimiento de contraseña enviado.",
+		"passwordResetSuccessful": "Restablecimiento de contraseña exitoso.",
+		"userProfileUpdated": "Perfil de usuario actualizado exitosamente."
+	},
+	"errors": {
+		"general": {
+			"internalServerError": "Error interno del servidor. Por favor, intente nuevamente más tarde.",
+			"allFieldsAreRequired": "Todos los campos son obligatorios.",
+			"invalidOtp": "OTP inválido.",
+			"otpExpired": "El OTP ha expirado.",
+			"sessionExpired": "La sesión ha expirado. Por favor, inicie sesión nuevamente.",
+			"unauthorized": "Acceso no autorizado.",
+			"invalidInput": "Entrada inválida proporcionada.",
+			"forbidden": "Acceso prohibido."
+		},
+		"user": {
+			"emailIsRequired": "El email es obligatorio.",
+			"invalidEmailFormat": "Formato de email inválido.",
+			"userAlreadyExists": "El usuario ya existe.",
+			"userCreatedSuccessfully": "Usuario creado exitosamente.",
+			"passwordTooWeak": "La contraseña es demasiado débil.",
+			"passwordMustBeAtLeast8Characters": "La contraseña debe tener al menos 8 caracteres.",
+			"passwordMustContainsAtLeastOneLowercaseLetter": "La contraseña debe contener al menos una letra minúscula.",
+			"passwordMustContainAtLeastOneUppercaseLetter": "La contraseña debe contener al menos una letra mayúscula.",
+			"passwordMustContainAtLeastOneDigit": "La contraseña debe contener al menos un dígito.",
+			"passwordMustContainAtLeastOneSpecialCharacter": "La contraseña debe contener al menos un carácter especial.",
+			"userDoesNotExist": "El usuario no existe.",
+			"userAlreadyVerified": "El usuario ya está verificado.",
+			"userNotVerified": "Usuario no verificado. Por favor, verifique su email primero.",
+			"invalidCredentials": "Credenciales inválidas.",
+			"invalidOrExpiredOtp": "OTP inválido o expirado.",
+			"userDeactivated": "La cuenta de usuario ha sido desactivada.",
+			"invalidCurrentPassword": "Contraseña actual inválida.",
+			"currentPasswordRequired": "La contraseña actual es obligatoria.",
+			"emailAlreadyExists": "El email ya existe.",
+			"usernameAlreadyExists": "El nombre de usuario ya existe.",
+			"userNotFound": "Usuario no encontrado."
+		}
+	}
+}

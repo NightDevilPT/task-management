@@ -1,4 +1,5 @@
 import RootProvider from "@/components/providers";
+import { AppSidebar } from "@/components/providers/sidebar-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({
@@ -8,7 +9,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<RootProvider>
-			{children}
+			<AppSidebar variant="inset">{children}</AppSidebar>
 			<Toaster />
 		</RootProvider>
 	);
