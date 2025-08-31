@@ -1,11 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
@@ -13,18 +7,24 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useLanguage } from "@/components/providers/language-provider";
-import ApiService from "@/services/api.service";
-import { toast } from "sonner";
-import { useRouter, useSearchParams } from "next/navigation";
 import {
 	InputOTP,
 	InputOTPGroup,
 	InputOTPSeparator,
 	InputOTPSlot,
 } from "@/components/ui/input-otp";
+import * as z from "zod";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import ApiService from "@/services/api.service";
+import { Button } from "@/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useLanguage } from "@/components/providers/language-provider";
 
 // Define the form schema with Zod
 const createVerifySchema = (dictionary: any) => {
