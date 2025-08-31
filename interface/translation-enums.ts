@@ -13,6 +13,7 @@ export enum TranslationEnum {
 	PASSWORD_RESET_EMAIL_SENT = "passwordResetEmailSent",
 	PASSWORD_RESET_SUCCESSFUL = "passwordResetSuccessful",
 	USER_PROFILE_UPDATED = "userProfileUpdated",
+	OTP_RESENT_SUCCESSFULLY = "otpResentSuccessfully",
 }
 
 export enum TranslationErrorEnum {

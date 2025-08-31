@@ -25,7 +25,7 @@ export class UserRegisteredEventHandler
 					`${firstName} ${lastName}`,
 					Number(otpCode),
 					currentYear,
-					`${config.origin}/auth/verify?email=${email}`
+					`${config.origin}/en/auth/verify?email=${email}`
 				),
 			};
 
