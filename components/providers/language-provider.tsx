@@ -42,7 +42,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
 				const dict = await getDictionary(language);
 				setDictionary(dict);
 			} catch (error) {
-				console.error("Failed to load dictionary:", error);
+				console.log("Failed to load dictionary:", error);
 				// Fallback to default locale if current language fails
 				if (language !== defaultLocale) {
 					const defaultDict = await getDictionary(defaultLocale);

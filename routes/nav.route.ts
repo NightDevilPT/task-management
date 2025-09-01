@@ -1,9 +1,27 @@
+import { PiKanbanFill } from "react-icons/pi";
 import { MdSpaceDashboard } from "react-icons/md";
+import { BsMicrosoftTeams } from "react-icons/bs";
+import { FaProjectDiagram } from "react-icons/fa";
 
 export const navMain = [
 	{
 		title: "Dashboard",
 		url: "#",
 		icon: MdSpaceDashboard,
+	},
+	{
+		title: "Projects",
+		url: "#",
+		icon: FaProjectDiagram,
+	},
+	{
+		title: "Teams",
+		url: "#",
+		icon: BsMicrosoftTeams,
+	},
+	{
+		title: "Kanban",
+		url: "#",
+		icon: PiKanbanFill,
 	},
 ];
