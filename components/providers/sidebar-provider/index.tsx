@@ -17,10 +17,12 @@ import { BookOpenCheck } from "lucide-react";
 import { navMain } from "@/routes/nav.route";
 import { NavUser } from "./sidebar-nav-user";
 import { user } from "@/data/user-dummy.data";
+import { useLanguage } from "../language-provider";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+	const { language } = useLanguage();
 	return (
 		<SidebarProvider
 			style={
@@ -45,7 +47,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				</SidebarHeader>
 				<Separator />
 				<SidebarContent className="py-2">
-					<NavMain items={navMain} />
+					<NavMain items={navMain(language)} />
 				</SidebarContent>
 				<Separator />
 				<SidebarFooter>

@@ -3,7 +3,7 @@ import { MdSettings, MdSpaceDashboard } from "react-icons/md";
 import { BsMicrosoftTeams } from "react-icons/bs";
 import { FaProjectDiagram } from "react-icons/fa";
 
-export const navMain = [
+export const navMain = (language: string) => [
 	{
 		title: "Dashboard",
 		url: "#",
@@ -11,7 +11,7 @@ export const navMain = [
 	},
 	{
 		title: "Projects",
-		url: "#",
+		url: `/${language}/projects`,
 		icon: FaProjectDiagram,
 	},
 	{

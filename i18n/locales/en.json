@@ -58,6 +58,26 @@
 		"resetButton": "Reset Password",
 		"backButton": "Back"
 	},
+	"projects": {
+		"title": "Projects",
+		"newProject": "New Project",
+		"createTitle": "Create New Project",
+		"editTitle": "Edit Project",
+		"createDescription": "Create a new project to organize your work",
+		"editDescription": "Update your project details",
+		"projectName": "Project Name",
+		"namePlaceholder": "Enter project name",
+		"description": "Description",
+		"descriptionPlaceholder": "Enter project description",
+		"status": "Status",
+		"selectStatus": "Select status",
+		"statusActive": "Active",
+		"statusOnHold": "On Hold",
+		"statusCompleted": "Completed",
+		"statusArchived": "Archived",
+		"createButton": "Create Project",
+		"updateButton": "Update Project"
+	},
 	"success": {
 		"userCreatedVerificationEmailSent": "User created successfully. Verification email sent.",
 		"userVerifiedSuccessfully": "User verified successfully.",

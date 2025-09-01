@@ -31,6 +31,7 @@ export enum TranslationErrorEnum {
 	INVALID_INPUT = "invalidInput",
 	FORBIDDEN = "forbidden",
 	PERMISSION_DENIED = "permissionDenied",
+	INVALID_PAGINATION_PARAMETERS = "invalidPaginationParameters",
 
 	// User Api Error Message
 	EMAIL_IS_REQUIRED = "emailIsRequired",
