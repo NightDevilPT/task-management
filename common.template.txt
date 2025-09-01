@@ -1,6 +1,4 @@
-Hi i am full stack developer and having one project name is Task Management System.
-Prisma Schema : `
-generator client {
+Prisma Code : generator client {
   provider = "prisma-client-js"
 }
 
@@ -89,6 +87,11 @@ model Project {
   teams      Team[]
   tasks      Task[]
   activities Activity[]
+  teamMembers TeamMember[] // Opposite relation for TeamMember.project
+  teamInvites TeamInvite[] // Opposite relation for TeamInvite.project
+  comments    Comment[]    // Opposite relation for Comment.project
+  attachments Attachment[] // Opposite relation for Attachment.project
+  notifications Notification[] // Opposite relation for Notification.project
   
   @@map("projects")
 }
@@ -119,12 +122,15 @@ model TeamMember {
   joinedAt  DateTime @default(now()) @map("joined_at")
   
   // Relations
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
-  team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team      Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId    String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
   
   @@unique([userId, teamId])
+  @@unique([userId, projectId, teamId]) // Ensure unique membership per project-team combination
   @@map("team_members")
 }
 
@@ -140,6 +146,8 @@ model TeamInvite {
   // Relations
   team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId    String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
   invitedBy User   @relation(fields: [invitedById], references: [id], onDelete: Cascade)
   invitedById String
   
@@ -184,6 +192,8 @@ model Comment {
   authorId  String
   task      Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId    String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
   
   @@map("comments")
 }
@@ -201,6 +211,8 @@ model Attachment {
   taskId    String
   uploadedBy User  @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
   uploadedById String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
   
   @@map("attachments")
 }
@@ -216,6 +228,8 @@ model Notification {
   // Relations
   user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String?
   
   @@map("notifications")
 }
@@ -233,209 +247,670 @@ model Activity {
   teamId    String?
   task      Task?  @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId    String?
-  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId String?
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
   
   @@map("activities")
 }
-`
 
-API's i want to create : `
-# Task Management System
+Reference Route Code : // app/api/auth/me/route.ts
+import {
+	TranslationEnum,
+	TranslationErrorEnum,
+} from "@/interface/translation-enums";
+import {
+	TokenPayload,
+	withTokenValidation,
+} from "@/middleware/cookie-validate.middleware";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import { validateEmail } from "@/lib/validator";
+import { ApiResponse } from "@/interface/api.interface";
+import { NextRequest, NextResponse } from "next/server";
+import { withRequestTiming } from "@/middleware/timestamp.middleware";
 
-Of course. This is a crucial planning step. Here's a comprehensive list of API routes you'll need to build for your Task Management System, organized by module.
+async function meHandler(request: NextRequest, payload?: TokenPayload) {
+	try {
+		if (!payload) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.UNAUTHORIZED,
+				statusCode: 401,
+				error: "Authentication Error",
+			};
+			return NextResponse.json(response, { status: 401 });
+		}
 
-# Task Management System
+		console.log(payload, "PAYLOAD");
 
-This document lists all planned API routes for the Task Management System, organized by module. Each route includes its implementation status.
+		// Get user from database
+		const user = await prisma.user.findUnique({
+			where: { id: payload.id },
+			select: {
+				id: true,
+				firstName: true,
+				lastName: true,
+				username: true,
+				email: true,
+				avatar: true,
+				isVerified: true,
+				isActive: true,
+				createdAt: true,
+				updatedAt: true,
+				lastLogin: true,
+			},
+		});
 
----
+		if (!user) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.USER_DOES_NOT_EXIST,
+				statusCode: 404,
+				error: "User Error",
+			};
+			return NextResponse.json(response, { status: 404 });
+		}
 
-## Authentication Routes (`/api/auth/[...]`)
+		if (!user.isActive) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.USER_DEACTIVATED,
+				statusCode: 403,
+				error: "Account Error",
+			};
+			return NextResponse.json(response, { status: 403 });
+		}
 
-| Method | Endpoint                    | Description                    | Status                                             |
-| :----- | :-------------------------- | :----------------------------- | :------------------------------------------------- |
-| `POST` | `/api/auth/register`        | Create a new user account      | <p style="color:green; font-weight:bold;">DONE</p> |
-| `POST` | `/api/auth/login`           | Login user & return JWT token  | <p style="color:green; font-weight:bold;">DONE</p> |
-| `POST` | `/api/auth/logout`          | Logout user (invalidate token) | <p style="color:green; font-weight:bold;">DONE</p> |
-| `PUT`  | `/api/auth/verify`          | Verify User                    | <p style="color:green; font-weight:bold;">DONE</p> |
-| `GET`  | `/api/auth/me`              | Get current user's profile     | <p style="color:green; font-weight:bold;">DONE</p> |
-| `PUT`  | `/api/auth/me`              | Update current user's profile  | <p style="color:green; font-weight:bold;">DONE</p> |
-| `POST` | `/api/auth/forgot-password` | Request password reset email   | <p style="color:green; font-weight:bold;">DONE</p> |
-| `POST` | `/api/auth/reset-password`  | Reset password with token      | <p style="color:green; font-weight:bold;">DONE</p> |
+		// Create success response
+		const response: ApiResponse = {
+			message: TranslationEnum.USER_PROFILE_RETRIEVED,
+			statusCode: 200,
+			data: user,
+		};
 
----
+		return NextResponse.json(response, { status: 200 });
+	} catch (error: any) {
+		console.error("Get user profile error:", error);
 
-## User Routes (`/api/users/[...]`)
+		const response: ApiResponse = {
+			message: TranslationErrorEnum.INTERNAL_SERVER_ERROR,
+			statusCode: 500,
+			error: "Profile Error",
+			errors: error.message ? [error.message] : undefined,
+		};
 
-| Method | Endpoint                           | Description                          | Status                                            |
-| :----- | :--------------------------------- | :----------------------------------- | :------------------------------------------------ |
-| `GET`  | `/api/users`                       | Get all users (for mentions/search)  | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET`  | `/api/users/:userId`               | Get a specific user's public profile | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET`  | `/api/users/me/teams`              | Get current user's teams & roles     | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET`  | `/api/users/me/tasks`              | Get current user's assigned tasks    | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET`  | `/api/users/me/notifications`      | Get current user's notifications     | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT`  | `/api/users/me/notifications/read` | Mark notifications as read           | <p style="color:blue; font-weight:bold;">TODO</p> |
+		return NextResponse.json(response, { status: 500 });
+	}
+}
 
----
+async function updateMeHandler(request: NextRequest, payload?: TokenPayload) {
+	try {
+		if (!payload) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.UNAUTHORIZED,
+				statusCode: 401,
+				error: "Authentication Error",
+			};
+			return NextResponse.json(response, { status: 401 });
+		}
 
-## Project Routes (`/api/projects/[...]`)
+		const body = await request.json();
+		const {
+			firstName,
+			lastName,
+			username,
+			email,
+			avatar,
+			currentPassword,
+			newPassword,
+		} = body;
 
-| Method   | Endpoint                            | Description                                                 | Status                                             |
-| :------- | :---------------------------------- | :---------------------------------------------------------- | :------------------------------------------------- |
-| `POST`   | `/api/projects`                     | Create a new project                                        | <p style="color:green; font-weight:bold;">DONE</p> |
-| `GET`    | `/api/projects`                     | Get all projects owned or member-associated by current user | <p style="color:green; font-weight:bold;">DONE</p> |
-| `GET`    | `/api/projects/:projectId`          | Get details of a specific project                           | <p style="color:green; font-weight:bold;">DONE</p> |
-| `PUT`    | `/api/projects/:projectId`          | Update project details (Owner only)                         | <p style="color:green; font-weight:bold;">DONE</p> |
-| `DELETE` | `/api/projects/:projectId`          | Delete/archive a project (Owner only)                       | <p style="color:blue; font-weight:bold;">TODO</p>  |
-| `GET`    | `/api/projects/:projectId/teams`    | Get all teams under a project                               | <p style="color:blue; font-weight:bold;">TODO</p>  |
-| `GET`    | `/api/projects/:projectId/tasks`    | Get all tasks under a project (aggregate from teams)        | <p style="color:blue; font-weight:bold;">TODO</p>  |
-| `GET`    | `/api/projects/:projectId/activity` | Get activity feed for a project                             | <p style="color:blue; font-weight:bold;">TODO</p>  |
+		// Check if user exists and is active
+		const existingUser = await prisma.user.findUnique({
+			where: { id: payload.id },
+		});
 
----
+		if (!existingUser) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.USER_DOES_NOT_EXIST,
+				statusCode: 404,
+				error: "User Error",
+			};
+			return NextResponse.json(response, { status: 404 });
+		}
 
-## Team Routes (`/api/teams/[...]`)
+		if (!existingUser.isActive) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.USER_DEACTIVATED,
+				statusCode: 403,
+				error: "Account Error",
+			};
+			return NextResponse.json(response, { status: 403 });
+		}
 
-| Method | Endpoint                                 | Description                             | Status                                             |
-| :----- | :--------------------------------------- | :-------------------------------------- | :------------------------------------------------- |
-| `POST` | `/api/teams/create-team`                 | Create a new team                       | <p style="color:green; font-weight:bold;">DONE</p> |
-| `GET`  | `/api/teams/get-teams`                   | Get all teams current user is member of | <p style="color:green; font-weight:bold;">DONE</p> |
-| `GET`  | `/api/teams/get-team-by-id/:[teamId]`    | Get a specific team's details           | <p style="color:green; font-weight:bold;">DONE</p> |
-| `PUT`  | `/api/teams/update-team-by-id/:[teamId]` | Update team details (Admin only)        | <p style="color:green; font-weight:bold;">DONE</p> |
+		// Prepare update data
+		const updateData: any = {};
 
----
+		// Validate and set basic fields
+		if (firstName !== undefined) {
+			if (!firstName.trim()) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
+			updateData.firstName = firstName.trim();
+		}
 
-## Task Routes (`/api/teams/:teamId/tasks/[...]`)
+		if (lastName !== undefined) {
+			if (!lastName.trim()) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
+			updateData.lastName = lastName.trim();
+		}
 
-| Method   | Endpoint                                  | Description                               | Status                                            |
-| :------- | :---------------------------------------- | :---------------------------------------- | :------------------------------------------------ |
-| `POST`   | `/api/teams/:teamId/tasks`                | Create a new task in a team               | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET`    | `/api/teams/:teamId/tasks`                | Get all tasks for a team (with filters)   | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET`    | `/api/teams/:teamId/tasks/:taskId`        | Get a specific task's details             | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT`    | `/api/teams/:teamId/tasks/:taskId`        | Update a task                             | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `DELETE` | `/api/teams/:teamId/tasks/:taskId`        | Delete a task                             | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT`    | `/api/teams/:teamId/tasks/:taskId/status` | Update task status (e.g., move on Kanban) | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT`    | `/api/teams/:teamId/tasks/:taskId/assign` | Assign/unassign a task to a user          | <p style="color:blue; font-weight:bold;">TODO</p> |
+		if (username !== undefined) {
+			if (!username.trim()) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
 
----
+			// Check if username is already taken by another user
+			const existingUsername = await prisma.user.findFirst({
+				where: {
+					username: username.trim(),
+					id: { not: payload.id },
+				},
+			});
 
-## Comment Routes (`/api/teams/:teamId/tasks/:taskId/comments/[...]`)
+			if (existingUsername) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.USERNAME_ALREADY_EXISTS,
+					statusCode: 409,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 409 });
+			}
 
-| Method   | Endpoint                  | Description                 | Status                                            |
-| :------- | :------------------------ | :-------------------------- | :------------------------------------------------ |
-| `POST`   | `.../comments`            | Add a comment to a task     | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET`    | `.../comments`            | Get all comments for a task | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `PUT`    | `.../comments/:commentId` | Edit a comment              | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `DELETE` | `.../comments/:commentId` | Delete a comment            | <p style="color:blue; font-weight:bold;">TODO</p> |
+			updateData.username = username.trim();
+		}
 
----
+		if (email !== undefined) {
+			if (!email.trim()) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.EMAIL_IS_REQUIRED,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
 
-## Attachment Routes (`/api/teams/:teamId/tasks/:taskId/attachments/[...]`)
+			if (!validateEmail(email)) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.INVALID_EMAIL_FORMAT,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
 
-| Method   | Endpoint                        | Description                    | Status                                            |
-| :------- | :------------------------------ | :----------------------------- | :------------------------------------------------ |
-| `POST`   | `.../attachments`               | Upload a file to a task        | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET`    | `.../attachments`               | Get all attachments for a task | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `DELETE` | `.../attachments/:attachmentId` | Delete an attachment           | <p style="color:blue; font-weight:bold;">TODO</p> |
+			// Check if email is already taken by another user
+			const existingEmail = await prisma.user.findFirst({
+				where: {
+					email: email.trim(),
+					id: { not: payload.id },
+				},
+			});
 
----
+			if (existingEmail) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.EMAIL_ALREADY_EXISTS,
+					statusCode: 409,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 409 });
+			}
 
-## Activity & Notification Routes (`/api/[...]`)
+			updateData.email = email.trim();
+			// If email is changed, mark as unverified and generate new OTP
+			if (email !== existingUser.email) {
+				const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+				updateData.isVerified = false;
+				updateData.otp = otp;
+				updateData.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+				// TODO: Send verification email here
+			}
+		}
 
-| Method | Endpoint                      | Description                             | Status                                            |
-| :----- | :---------------------------- | :-------------------------------------- | :------------------------------------------------ |
-| `GET`  | `/api/teams/:teamId/activity` | Get recent activity for a team          | <p style="color:blue; font-weight:bold;">TODO</p> |
-| `GET`  | `/api/me/activity`            | Get current user's global activity feed | <p style="color:blue; font-weight:bold;">TODO</p> |
+		if (avatar !== undefined) {
+			updateData.avatar = avatar;
+		}
 
----
+		// Handle password change
+		if (newPassword) {
+			if (!currentPassword) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.CURRENT_PASSWORD_REQUIRED,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
 
-## Summary of Route Structure
+			// Verify current password
+			const isCurrentPasswordValid = await bcrypt.compare(
+				currentPassword,
+				existingUser.password
+			);
+			if (!isCurrentPasswordValid) {
+				const response: ApiResponse = {
+					message: TranslationErrorEnum.INVALID_CURRENT_PASSWORD,
+					statusCode: 400,
+					error: "Validation Error",
+				};
+				return NextResponse.json(response, { status: 400 });
+			}
 
-Your API structure will look like this in the `app/api/` directory:
+			// Hash new password
+			updateData.password = await bcrypt.hash(newPassword, 12);
+		}
 
-```
-app/api/
-├── auth/
-│   ├── register/route.ts
-│   ├── login/route.ts
-│   ├── logout/route.ts
-│   ├── me/route.ts
-│   └── ...
-├── users/
-│   ├── route.ts          # GET /api/users
-│   ├── [userId]/route.ts # GET /api/users/:userId
-│   └── me/
-│       ├── teams/route.ts
-│       ├── tasks/route.ts
-│       └── notifications/route.ts
-├── teams/
-│   ├── route.ts                      # GET, POST /api/teams
-│   ├── [teamId]/
-│   │   ├── route.ts                  # GET, PUT, DELETE /api/teams/:teamId
-│   │   ├── members/
-│   │   │   ├── route.ts              # GET /api/teams/:teamId/members
-│   │   │   └── [userId]/route.ts     # PUT, DELETE /api/teams/:teamId/members/:userId
-│   │   ├── invites/
-│   │   │   ├── route.ts              # GET, POST /api/teams/:teamId/invites
-│   │   │   └── [inviteId]/route.ts   # DELETE /api/teams/:teamId/invites/:inviteId
-│   │   └── tasks/
-│   │       ├── route.ts              # GET, POST /api/teams/:teamId/tasks
-│   │       └── [taskId]/
-│   │           ├── route.ts          # GET, PUT, DELETE /api/teams/:teamId/tasks/:taskId
-│   │           ├── comments/
-│   │           │   ├── route.ts
-│   │           │   └── [commentId]/route.ts
-│   │           └── attachments/
-│   │               ├── route.ts
-│   │               └── [attachmentId]/route.ts
-│   └── invites/
-│       └── [token]/
-│           ├── accept/route.ts
-│           └── decline/route.ts
-└── me/
-    ├── notifications/route.ts
-    └── activity/route.ts
-```
+		// Update user
+		const updatedUser = await prisma.user.update({
+			where: { id: payload.id },
+			data: updateData,
+			select: {
+				id: true,
+				firstName: true,
+				lastName: true,
+				username: true,
+				email: true,
+				avatar: true,
+				isVerified: true,
+				isActive: true,
+				createdAt: true,
+				updatedAt: true,
+			},
+		});
 
-**Priority Order for Implementation (MVP First):**
+		const response: ApiResponse = {
+			message: TranslationEnum.USER_PROFILE_UPDATED,
+			statusCode: 200,
+			data: updatedUser,
+		};
 
-1.  Auth Routes (`/api/auth/*`)
-2.  Team Routes (`/api/teams`, `/api/teams/[teamId]`)
-3.  Task Routes (`/api/teams/[teamId]/tasks`)
-4.  Comment Routes
-5.  Invite & Member Routes
-6.  The rest (Attachments, Activity, etc.)
+		return NextResponse.json(response, { status: 200 });
+	} catch (error: any) {
+		console.error("Update user profile error:", error);
 
-<hr>
+		const response: ApiResponse = {
+			message: TranslationErrorEnum.INTERNAL_SERVER_ERROR,
+			statusCode: 500,
+			error: "Update Error",
+			errors: error.message ? [error.message] : undefined,
+		};
 
-```mermaid
-flowchart TD
-    User
+		return NextResponse.json(response, { status: 500 });
+	}
+}
 
-    User -->|teamMemberships| TeamMember
-    User -->|createdTeams| Team
-    User -->|createdTasks| Task
-    User -->|assignedTasks| Task
-    User -->|teamInvites| TeamInvite
-    User -->|comments| Comment
-    User -->|attachments| Attachment
-    User -->|notifications| Notification
-    User -->|activities| Activity
+// Apply token validation middleware
+const wrappedGetHandler = withTokenValidation(meHandler);
+const wrappedPutHandler = withTokenValidation(updateMeHandler);
 
-    subgraph TeamContext [Team & Membership]
-        TeamMember -->|defines role in| Team
-    end
+export const GET = withRequestTiming(wrappedGetHandler);
+export const PUT = withRequestTiming(wrappedPutHandler);
 
-    subgraph TaskContext [Task & Collaboration]
-        Comment
-        Attachment
-    end
+Permission Checker Lib Code : export enum ResourceType {
+	PROJECT = "PROJECT",
+	TEAM = "TEAM",
+	TASK = "TASK",
+	COMMENT = "COMMENT",
+	ATTACHMENT = "ATTACHMENT",
+	USER = "USER",
+}
 
-    subgraph System [System & Logging]
-        Notification
-        Activity
-    end
-```
-```
+export enum Action {
+	CREATE = "CREATE",
+	READ = "READ",
+	UPDATE = "UPDATE",
+	DELETE = "DELETE",
+	MANAGE = "MANAGE",
+}
+
+export enum TeamRole {
+	ADMIN = "ADMIN",
+	MANAGER = "MANAGER",
+	MEMBER = "MEMBER",
+}
+
+// Interface for user context
+export interface UserContext {
+	id: string;
+	role: TeamRole;
+	// Add other user properties if needed for permission checks
+}
+
+// Interface for resource context (optional, for ownership checks)
+export interface ResourceContext {
+	ownerId?: string;
+	teamId?: string;
+	projectId?: string;
+	// Add other resource-specific properties
+}
+
+// Permission matrix defining what each role can do
+const permissionMatrix: Record<TeamRole, Record<ResourceType, Action[]>> = {
+	[TeamRole.ADMIN]: {
+		[ResourceType.PROJECT]: [
+			Action.CREATE,
+			Action.READ,
+			Action.UPDATE,
+			Action.DELETE,
+			Action.MANAGE,
+		],
+		[ResourceType.TEAM]: [
+			Action.CREATE,
+			Action.READ,
+			Action.UPDATE,
+			Action.DELETE,
+			Action.MANAGE,
+		],
+		[ResourceType.TASK]: [
+			Action.CREATE,
+			Action.READ,
+			Action.UPDATE,
+			Action.DELETE,
+			Action.MANAGE,
+		],
+		[ResourceType.COMMENT]: [
+			Action.CREATE,
+			Action.READ,
+			Action.UPDATE,
+			Action.DELETE,
+		],
+		[ResourceType.ATTACHMENT]: [
+			Action.CREATE,
+			Action.READ,
+			Action.UPDATE,
+			Action.DELETE,
+		],
+		[ResourceType.USER]: [Action.READ, Action.MANAGE], // Admins can manage users within their scope
+	},
+	[TeamRole.MANAGER]: {
+		[ResourceType.PROJECT]: [Action.READ], // Only read connected projects
+		[ResourceType.TEAM]: [
+			Action.CREATE,
+			Action.READ,
+			Action.UPDATE,
+			Action.DELETE,
+			Action.MANAGE,
+		],
+		[ResourceType.TASK]: [
+			Action.CREATE,
+			Action.READ,
+			Action.UPDATE,
+			Action.DELETE,
+			Action.MANAGE,
+		],
+		[ResourceType.COMMENT]: [
+			Action.CREATE,
+			Action.READ,
+			Action.UPDATE,
+			Action.DELETE,
+		],
+		[ResourceType.ATTACHMENT]: [
+			Action.CREATE,
+			Action.READ,
+			Action.UPDATE,
+			Action.DELETE,
+		],
+		[ResourceType.USER]: [Action.READ],
+	},
+	[TeamRole.MEMBER]: {
+		[ResourceType.PROJECT]: [Action.READ], // Only read connected projects
+		[ResourceType.TEAM]: [Action.READ], // Only read connected teams
+		[ResourceType.TASK]: [
+			Action.CREATE,
+			Action.READ,
+			Action.UPDATE,
+			Action.DELETE,
+		],
+		[ResourceType.COMMENT]: [
+			Action.CREATE,
+			Action.READ,
+			Action.UPDATE,
+			Action.DELETE,
+		],
+		[ResourceType.ATTACHMENT]: [
+			Action.CREATE,
+			Action.READ,
+			Action.UPDATE,
+			Action.DELETE,
+		],
+		[ResourceType.USER]: [Action.READ],
+	},
+};
+
+// Additional ownership-based permissions
+const ownershipPermissions: Partial<Record<ResourceType, Action[]>> = {
+	[ResourceType.PROJECT]: [Action.UPDATE, Action.DELETE, Action.MANAGE],
+	[ResourceType.TASK]: [Action.UPDATE, Action.DELETE],
+	[ResourceType.COMMENT]: [Action.UPDATE, Action.DELETE],
+	[ResourceType.ATTACHMENT]: [Action.UPDATE, Action.DELETE],
+};
+
+export class PermissionService {
+	/**
+	 * Check if a user has permission to perform an action on a resource
+	 */
+	static hasPermission(
+		user: UserContext,
+		action: Action,
+		resourceType: ResourceType,
+		resourceContext?: ResourceContext
+	): boolean {
+		// Get base permissions for the user's role
+		const rolePermissions =
+			permissionMatrix[user.role]?.[resourceType] || [];
+
+		// Check if action is allowed by role
+		if (rolePermissions.includes(action)) {
+			return true;
+		}
+
+		// Check ownership-based permissions
+		if (resourceContext?.ownerId && user.id === resourceContext.ownerId) {
+			const ownerPermissions = ownershipPermissions[resourceType] || [];
+			if (ownerPermissions.includes(action)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if user can access a specific resource based on ownership/association
+	 */
+	static canAccessResource(
+		user: UserContext,
+		resourceType: ResourceType,
+		resourceContext: ResourceContext
+	): boolean {
+		// Owners can always access their resources
+		if (resourceContext.ownerId && user.id === resourceContext.ownerId) {
+			return true;
+		}
+
+		// Additional access logic based on resource type and user role
+		switch (resourceType) {
+			case ResourceType.PROJECT:
+				// For projects, check if user is member of any team in the project
+				// This would require additional service calls in real implementation
+				return user.role === TeamRole.ADMIN;
+
+			case ResourceType.TEAM:
+				// For teams, check if user is a member
+				// This would require checking team membership
+				return user.role === TeamRole.ADMIN;
+
+			case ResourceType.TASK:
+				// For tasks, check if user is assigned or in the team
+				return user.role !== TeamRole.MEMBER; // Simplified for example
+
+			default:
+				return true;
+		}
+	}
+
+	/**
+	 * Filter resources based on user permissions
+	 */
+	static filterResources<T extends ResourceContext>(
+		user: UserContext,
+		resources: T[],
+		resourceType: ResourceType
+	): T[] {
+		return resources.filter((resource) =>
+			this.canAccessResource(user, resourceType, resource)
+		);
+	}
+
+	/**
+	 * Check multiple permissions at once (useful for complex operations)
+	 */
+	static hasPermissions(
+		user: UserContext,
+		permissions: Array<{
+			action: Action;
+			resourceType: ResourceType;
+			resourceContext?: ResourceContext;
+		}>
+	): boolean {
+		return permissions.every((permission) =>
+			this.hasPermission(
+				user,
+				permission.action,
+				permission.resourceType,
+				permission.resourceContext
+			)
+		);
+	}
+}
+
+// Utility functions for common permission checks
+export const PermissionChecks = {
+	// Project permissions
+	canCreateProject: (user: UserContext) =>
+		PermissionService.hasPermission(
+			user,
+			Action.CREATE,
+			ResourceType.PROJECT
+		),
+
+	canViewProject: (user: UserContext, project?: ResourceContext) =>
+		PermissionService.hasPermission(
+			user,
+			Action.READ,
+			ResourceType.PROJECT,
+			project
+		),
+
+	canEditProject: (user: UserContext, project: ResourceContext) =>
+		PermissionService.hasPermission(
+			user,
+			Action.UPDATE,
+			ResourceType.PROJECT,
+			project
+		),
+
+	canDeleteProject: (user: UserContext, project: ResourceContext) =>
+		PermissionService.hasPermission(
+			user,
+			Action.DELETE,
+			ResourceType.PROJECT,
+			project
+		),
+
+	// Team permissions
+	canCreateTeam: (user: UserContext) =>
+		PermissionService.hasPermission(user, Action.CREATE, ResourceType.TEAM),
+
+	canViewTeam: (user: UserContext, team?: ResourceContext) =>
+		PermissionService.hasPermission(
+			user,
+			Action.READ,
+			ResourceType.TEAM,
+			team
+		),
+
+	canEditTeam: (user: UserContext, team: ResourceContext) =>
+		PermissionService.hasPermission(
+			user,
+			Action.UPDATE,
+			ResourceType.TEAM,
+			team
+		),
+
+	canDeleteTeam: (user: UserContext, team: ResourceContext) =>
+		PermissionService.hasPermission(
+			user,
+			Action.DELETE,
+			ResourceType.TEAM,
+			team
+		),
+
+	// Task permissions
+	canCreateTask: (user: UserContext) =>
+		PermissionService.hasPermission(user, Action.CREATE, ResourceType.TASK),
+
+	canViewTask: (user: UserContext, task?: ResourceContext) =>
+		PermissionService.hasPermission(
+			user,
+			Action.READ,
+			ResourceType.TASK,
+			task
+		),
+
+	canEditTask: (user: UserContext, task: ResourceContext) =>
+		PermissionService.hasPermission(
+			user,
+			Action.UPDATE,
+			ResourceType.TASK,
+			task
+		),
+
+	canDeleteTask: (user: UserContext, task: ResourceContext) =>
+		PermissionService.hasPermission(
+			user,
+			Action.DELETE,
+			ResourceType.TASK,
+			task
+		),
+};
+
+PERMISSION i have decided
+- ADMIN -> Create Projectd
+- ADMIN -> Only Can see own created Projects
+- Admin -> Only Update Own created projects
+- Admin -> Create Teams, Tickets
+- Admin -> Only can see own Projects -> Teams -> Tickets
+- Admin -> Can invite user
+
+- Manager -> Create Teams
+- Manager -> Only Can see Connected Teams Projects
+- Manager -> Create Teams, Tickets
+- Manager -> Only can see Connected Teams Projects -> Teams -> Tickets
+
+- MEMBER -> Only can create ticket, see connected teams with ticket and only can see connected teams project
 
 Please memorize this all the code in you memory so i can proceed the development with you

@@ -1,19 +1,22 @@
-// lib/middleware/withRequestTiming.ts
 import { ApiResponse } from "@/interface/api.interface";
 import { NextRequest, NextResponse } from "next/server";
 
-type Handler = (request: NextRequest, payload?: any) => Promise<NextResponse>;
+// Handler type that matches Next.js route handler signature
+type Handler = (
+	request: NextRequest,
+	context: { params?: any }
+) => Promise<NextResponse>;
 
 export function withRequestTiming(handler: Handler): Handler {
 	return async (
 		request: NextRequest,
-		payload?: any
+		context: { params?: any } = {}
 	): Promise<NextResponse> => {
 		const startDate = new Date();
 		const startHrTime = process.hrtime();
 
 		try {
-			const response = await handler(request, payload);
+			const response = await handler(request, context);
 			const responseData = await response.clone().json();
 
 			const [seconds, nanoseconds] = process.hrtime(startHrTime);

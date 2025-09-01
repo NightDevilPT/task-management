@@ -14,8 +14,9 @@ import { ApiResponse } from "@/interface/api.interface";
 import { NextRequest, NextResponse } from "next/server";
 import { withRequestTiming } from "@/middleware/timestamp.middleware";
 
-async function meHandler(request: NextRequest, payload?: TokenPayload) {
+async function meHandler(request: NextRequest) {
 	try {
+		const payload = (request as any)?.user;
 		if (!payload) {
 			const response: ApiResponse = {
 				message: TranslationErrorEnum.UNAUTHORIZED,
@@ -85,8 +86,9 @@ async function meHandler(request: NextRequest, payload?: TokenPayload) {
 	}
 }
 
-async function updateMeHandler(request: NextRequest, payload?: TokenPayload) {
+async function updateMeHandler(request: NextRequest) {
 	try {
+		const payload = (request as any)?.user;
 		if (!payload) {
 			const response: ApiResponse = {
 				message: TranslationErrorEnum.UNAUTHORIZED,

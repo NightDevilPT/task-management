@@ -6,14 +6,14 @@ export enum ProjectStatusEnum {
 }
 
 // Request body interface
-export interface CreateProjectRequest {
+export interface ICreateProjectRequest {
 	name: string;
 	description?: string;
 	status?: ProjectStatusEnum;
 }
 
 // Request body interface
-export interface UpdateProjectRequest {
+export interface IUpdateProjectRequest {
 	name: string;
 	description?: string;
 	status?: ProjectStatusEnum;

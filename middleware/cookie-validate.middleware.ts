@@ -1,4 +1,3 @@
-// lib/middleware/withTokenValidation.ts
 import { cookies } from "next/headers";
 import jwtService from "@/services/jwt.service";
 import { ApiResponse } from "@/interface/api.interface";
@@ -9,18 +8,20 @@ import { TranslationErrorEnum } from "@/interface/translation-enums";
 export interface TokenPayload {
 	id: string;
 	email: string;
-	// Add other fields you store in the token
 	role?: string;
-	// ... any other claims
 }
 
+// Handler type that matches Next.js route handler signature
 type Handler = (
 	request: NextRequest,
-	payload?: TokenPayload
+	context: { params?: any } // Use any for params to be flexible
 ) => Promise<NextResponse>;
 
 export function withTokenValidation(handler: Handler): Handler {
-	return async (request: NextRequest): Promise<NextResponse> => {
+	return async (
+		request: NextRequest,
+		context: { params?: any } = {} // Use any for params to be flexible
+	): Promise<NextResponse> => {
 		try {
 			const cookieStore = cookies();
 			const accessToken = (await cookieStore).get("access_token")?.value;
@@ -53,7 +54,10 @@ export function withTokenValidation(handler: Handler): Handler {
 						accessToken,
 						"access"
 					) as TokenPayload;
-					return await handler(request, payload);
+
+					// Store payload in request for downstream handlers to access
+					(request as any).user = payload;
+					return await handler(request, context);
 				}
 				shouldRefresh = true;
 			}
@@ -81,8 +85,11 @@ export function withTokenValidation(handler: Handler): Handler {
 						email: payload.email,
 					});
 
+					// Store payload in request for downstream handlers
+					(request as any).user = payload;
+
 					// Create response from handler first
-					const response = await handler(request, payload);
+					const response = await handler(request, context);
 
 					// Set new cookies
 					const isProd = process.env.NODE_ENV === "production";
@@ -99,7 +106,7 @@ export function withTokenValidation(handler: Handler): Handler {
 						secure: isProd,
 						path: "/",
 						sameSite: "lax",
-						maxAge: 60 * 20, // 7 days
+						maxAge: 60 * 60 * 24 * 7, // 7 days
 					});
 
 					return response;

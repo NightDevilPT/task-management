@@ -14,6 +14,10 @@ export enum TranslationEnum {
 	PASSWORD_RESET_SUCCESSFUL = "passwordResetSuccessful",
 	USER_PROFILE_UPDATED = "userProfileUpdated",
 	OTP_RESENT_SUCCESSFULLY = "otpResentSuccessfully",
+
+	PROJECT_CREATED_SUCCESSFULLY = "projectCreatedSuccessfully",
+	PROJECT_UPDATED_SUCCESSFULLY = "projectUpdatedSuccessfully",
+	PROJECT_RETRIEVED_SUCCESSFULLY = "Project retrieved successfully",
 }
 
 export enum TranslationErrorEnum {
@@ -26,6 +30,7 @@ export enum TranslationErrorEnum {
 	UNAUTHORIZED = "unauthorized",
 	INVALID_INPUT = "invalidInput",
 	FORBIDDEN = "forbidden",
+	PERMISSION_DENIED = "permissionDenied",
 
 	// User Api Error Message
 	EMAIL_IS_REQUIRED = "emailIsRequired",
@@ -49,4 +54,6 @@ export enum TranslationErrorEnum {
 	EMAIL_ALREADY_EXISTS = "emailAlreadyExists",
 	USERNAME_ALREADY_EXISTS = "usernameAlreadyExists",
 	USER_NOT_FOUND = "userNotFound",
+
+	PROJECT_NOT_FOUND = "Project not found",
 }

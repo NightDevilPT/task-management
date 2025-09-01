@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withRequestTiming } from "@/middleware/timestamp.middleware";
 import { validateEmail, validatePasswordWithErrors } from "@/lib/validator";
 import { UserRegisteredEvent } from "@/lib/events/users/impl/user-registered.event";
+import { TeamRole } from "@/lib/permission";
 
 async function registerHandler(request: NextRequest) {
 	try {
@@ -85,6 +86,7 @@ async function registerHandler(request: NextRequest) {
 				isActive: true,
 				otp: otp,
 				otpExpiry: tokenExpiry,
+				role: TeamRole.ADMIN
 			},
 			select: {
 				id: true,

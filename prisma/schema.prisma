@@ -57,7 +57,7 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
   lastLogin    DateTime?
   isActive     Boolean  @default(true)
-  
+  role         TeamRole @default(MEMBER)
   // Relations
   teamMemberships TeamMember[]
   createdTeams    Team[]      @relation("TeamOwner")

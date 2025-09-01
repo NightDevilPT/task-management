@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation"; // Added usePathname
+import { useRouter, usePathname } from "next/navigation";
 import ApiService from "@/services/api.service";
 import { toast } from "sonner";
 import { useLanguage } from "@/components/providers/language-provider";
@@ -43,6 +43,16 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 // Key for storing the last route in localStorage
 const LAST_ROUTE_KEY = "lastRoute";
 
+// Helper function to check if current path is an auth route
+const isAuthRoute = (pathname: string): boolean => {
+	return (
+		pathname.includes("/auth/login") ||
+		pathname.includes("/auth/signup") ||
+		pathname.includes("/auth/verify") ||
+		pathname.includes("/auth/update-password")
+	);
+};
+
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
 }) => {
@@ -53,26 +63,29 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 	});
 
 	const router = useRouter();
-	const pathname = usePathname(); // Get current route
+	const pathname = usePathname();
 	const { dictionary, language } = useLanguage();
 
 	// Store last route in localStorage when navigating (skip auth routes)
 	useEffect(() => {
-		if (
-			pathname &&
-			!pathname.includes("/auth/login") &&
-			!pathname.includes("/auth/signup") &&
-			!pathname.includes("/auth/verify") &&
-			!pathname.includes("/auth/update-password")
-		) {
+		if (pathname && !isAuthRoute(pathname)) {
 			localStorage.setItem(LAST_ROUTE_KEY, pathname);
 		}
 	}, [pathname]);
 
-	// Check if user is authenticated on mount
+	// Check if user is authenticated on mount (skip for auth routes)
 	useEffect(() => {
-		checkAuthStatus();
-	}, []);
+		if (pathname && isAuthRoute(pathname)) {
+			// Don't check auth status for auth routes
+			setAuthState({
+				user: null,
+				isAuthenticated: false,
+				isLoading: false,
+			});
+		} else {
+			checkAuthStatus();
+		}
+	}, [pathname]);
 
 	const checkAuthStatus = async () => {
 		try {
@@ -103,11 +116,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 			if (error.statusCode === 401 || error.statusCode === 403) {
 				await clearTokens();
 				// Store the current route before redirecting to login (if not an auth route)
-				if (
-					pathname &&
-					!pathname.includes("/auth/login") &&
-					!pathname.includes("/auth/register")
-				) {
+				if (pathname && !isAuthRoute(pathname)) {
 					localStorage.setItem(LAST_ROUTE_KEY, pathname);
 				}
 				router.push(`/${language}/auth/login`);
@@ -116,15 +125,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 	};
 
 	const clearTokens = async () => {
+		// Only call logout API if not on an auth route
+		if (pathname && !isAuthRoute(pathname)) {
+			try {
+				await ApiService.post("/auth/logout");
+			} catch (error) {
+				// Ignore errors during cleanup
+			}
+		}
+
 		// Clear tokens from ApiService
 		ApiService.setAuthToken(null);
-
-		// Clear cookies by making a logout request
-		try {
-			await ApiService.post("/auth/logout");
-		} catch (error) {
-			// Ignore errors during cleanup
-		}
 	};
 
 	const login = async (email: string, password: string): Promise<void> => {
@@ -148,7 +159,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 				// Redirect to the saved route or fallback to /dashboard
 				const savedRoute = localStorage.getItem(LAST_ROUTE_KEY);
 				localStorage.removeItem(LAST_ROUTE_KEY); // Clear the saved route
-				router.push(savedRoute || "/dashboard");
+				router.push(savedRoute || "/");
 			} else {
 				throw new Error(response.message);
 			}
@@ -180,7 +191,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const logout = async (): Promise<void> => {
 		try {
-			await ApiService.post("/auth/logout");
+			// Only call logout API if not on an auth route
+			if (pathname && !isAuthRoute(pathname)) {
+				await ApiService.post("/auth/logout");
+			}
 		} catch (error) {
 			console.log("Logout API call failed:", error);
 			// Continue with local logout even if API call fails
@@ -307,16 +321,12 @@ export const useUser = (): UserContextType => {
 export const useRequireAuth = (redirectTo: string = "/auth/login") => {
 	const { isAuthenticated, isLoading } = useUser();
 	const router = useRouter();
-	const pathname = usePathname(); // Get current route
+	const pathname = usePathname();
 
 	useEffect(() => {
 		if (!isLoading && !isAuthenticated) {
 			// Store the current route before redirecting (if not an auth route)
-			if (
-				pathname &&
-				!pathname.includes("/auth/login") &&
-				!pathname.includes("/auth/register")
-			) {
+			if (pathname && !isAuthRoute(pathname)) {
 				localStorage.setItem(LAST_ROUTE_KEY, pathname);
 			}
 			router.push(redirectTo);
@@ -327,9 +337,7 @@ export const useRequireAuth = (redirectTo: string = "/auth/login") => {
 };
 
 // Hook for components that should redirect if already authenticated
-export const useRedirectIfAuthenticated = (
-	redirectTo: string = "/dashboard"
-) => {
+export const useRedirectIfAuthenticated = (redirectTo: string = "/") => {
 	const { isAuthenticated, isLoading } = useUser();
 	const router = useRouter();
 

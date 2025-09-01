@@ -15,10 +15,12 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
+import { MdSettings } from "react-icons/md";
 import { HiDotsVertical } from "react-icons/hi";
-import { MdNotificationImportant } from "react-icons/md";
-import { CreditCard, LogOutIcon, UserCircle } from "lucide-react";
+import { LogOutIcon, UserCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUser } from "../user-context";
+
 
 export function NavUser({
 	user,
@@ -30,6 +32,7 @@ export function NavUser({
 	};
 }) {
 	const { isMobile } = useSidebar();
+	const { user: userData } = useUser()
 
 	return (
 		<SidebarMenu>
@@ -42,8 +45,8 @@ export function NavUser({
 						>
 							<Avatar className="h-8 w-8 rounded-lg grayscale">
 								<AvatarImage
-									src={user.avatar}
-									alt={user.name}
+									src={userData?.avatar || user.avatar}
+									alt={userData?.username || user.name}
 								/>
 								<AvatarFallback className="rounded-lg">
 									CN
@@ -51,10 +54,10 @@ export function NavUser({
 							</Avatar>
 							<div className="grid flex-1 text-left text-sm leading-tight">
 								<span className="truncate font-medium">
-									{user.name}
+									{userData?.username || user.name}
 								</span>
 								<span className="text-muted-foreground truncate text-xs">
-									{user.email}
+									{userData?.email || user.email}
 								</span>
 							</div>
 							<HiDotsVertical className="ml-auto size-4" />
@@ -70,8 +73,8 @@ export function NavUser({
 							<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
 								<Avatar className="h-8 w-8 rounded-lg">
 									<AvatarImage
-										src={user.avatar}
-										alt={user.name}
+										src={userData?.avatar || user.avatar}
+										alt={userData?.username || user.name}
 									/>
 									<AvatarFallback className="rounded-lg">
 										CN
@@ -79,10 +82,10 @@ export function NavUser({
 								</Avatar>
 								<div className="grid flex-1 text-left text-sm leading-tight">
 									<span className="truncate font-medium">
-										{user.name}
+										{userData?.username || user.name}
 									</span>
 									<span className="text-muted-foreground truncate text-xs">
-										{user.email}
+										{userData?.email || user.email}
 									</span>
 								</div>
 							</div>
@@ -91,15 +94,11 @@ export function NavUser({
 						<DropdownMenuGroup>
 							<DropdownMenuItem>
 								<UserCircle />
-								Account
+								Profile
 							</DropdownMenuItem>
 							<DropdownMenuItem>
-								<CreditCard />
-								Billing
-							</DropdownMenuItem>
-							<DropdownMenuItem>
-								<MdNotificationImportant />
-								Notifications
+								<MdSettings />
+								Settings
 							</DropdownMenuItem>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />

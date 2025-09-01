@@ -1,5 +1,5 @@
 import { PiKanbanFill } from "react-icons/pi";
-import { MdSpaceDashboard } from "react-icons/md";
+import { MdSettings, MdSpaceDashboard } from "react-icons/md";
 import { BsMicrosoftTeams } from "react-icons/bs";
 import { FaProjectDiagram } from "react-icons/fa";
 
@@ -23,5 +23,10 @@ export const navMain = [
 		title: "Kanban",
 		url: "#",
 		icon: PiKanbanFill,
+	},
+	{
+		title: "Settings",
+		url: "#",
+		icon: MdSettings,
 	},
 ];
