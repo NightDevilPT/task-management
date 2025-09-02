@@ -4,14 +4,6 @@ import {
 	TranslationErrorEnum,
 } from "@/interface/translation-enums";
 import {
-	TokenPayload,
-	withTokenValidation,
-} from "@/middleware/cookie-validate.middleware";
-import { prisma } from "@/lib/prisma";
-import { ApiResponse } from "@/interface/api.interface";
-import { NextRequest, NextResponse } from "next/server";
-import { withRequestTiming } from "@/middleware/timestamp.middleware";
-import {
 	Action,
 	PermissionService,
 	ResourceType,
@@ -22,11 +14,14 @@ import {
 	ICreateProjectRequest,
 	ProjectStatusEnum,
 } from "@/interface/project.interface";
+import { prisma } from "@/lib/prisma";
+import { ApiResponse } from "@/interface/api.interface";
+import { NextRequest, NextResponse } from "next/server";
+import { withRequestTiming } from "@/middleware/timestamp.middleware";
+import { withTokenValidation } from "@/middleware/cookie-validate.middleware";
 
 // POST /api/projects - Creates a new project with permission checks
-async function handleCreateProject(
-	request: NextRequest,
-) {
+async function handleCreateProject(request: NextRequest) {
 	try {
 		const payload = (request as any)?.user;
 		// Validate token payload

@@ -10,7 +10,11 @@
 		"success": "Success",
 		"error": "Error",
 		"requiredField": "This field is required",
-		"invalidEmail": "Invalid email address"
+		"invalidEmail": "Invalid email address",
+		"view": "View",
+		"edit": "Edit",
+		"delete": "Delete",
+		"actions": "Actions"
 	},
 	"signup": {
 		"title": "Get Started with TaskFlow",
@@ -76,7 +80,8 @@
 		"statusCompleted": "Completed",
 		"statusArchived": "Archived",
 		"createButton": "Create Project",
-		"updateButton": "Update Project"
+		"updateButton": "Update Project",
+		"deleteConfirm": "Are you sure you want to delete this project?"
 	},
 	"success": {
 		"userCreatedVerificationEmailSent": "User created successfully. Verification email sent.",
@@ -92,7 +97,11 @@
 		"passwordResetEmailSent": "Password reset email sent.",
 		"passwordResetSuccessful": "Password reset successful.",
 		"userProfileUpdated": "User profile updated successfully.",
-		"otpResentSuccessfully": "Verification code has been resent to your email"
+		"otpResentSuccessfully": "Verification code has been resent to your email",
+
+		"projectCreatedSuccessfully": "Project created successfully.",
+		"projectUpdatedSuccessfully": "Project updated successfully.",
+		"projectRetrievedSuccessfully": "Project retrieved successfully."
 	},
 	"error": {
 		"internalServerError": "Internal server error. Please try again later.",

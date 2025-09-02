@@ -109,7 +109,7 @@ export function ProjectForm({
 				response = await ApiService.post(`/projects/create`, data);
 			} else if (project?.id) {
 				response = await ApiService.put(
-					`/projects/${project.id}`,
+					`/projects/update/${project.id}`,
 					data
 				);
 			}

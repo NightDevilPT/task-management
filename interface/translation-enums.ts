@@ -17,7 +17,7 @@ export enum TranslationEnum {
 
 	PROJECT_CREATED_SUCCESSFULLY = "projectCreatedSuccessfully",
 	PROJECT_UPDATED_SUCCESSFULLY = "projectUpdatedSuccessfully",
-	PROJECT_RETRIEVED_SUCCESSFULLY = "Project retrieved successfully",
+	PROJECT_RETRIEVED_SUCCESSFULLY = "projectRetrievedSuccessfully",
 }
 
 export enum TranslationErrorEnum {

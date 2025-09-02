@@ -18,3 +18,31 @@ export interface IUpdateProjectRequest {
 	description?: string;
 	status?: ProjectStatusEnum;
 }
+
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  status: ProjectStatusEnum;
+  createdAt: string;
+  updatedAt: string;
+  owner: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+  _count?: {
+    teams: number;
+    tasks: number;
+  };
+  teamsCount?: number;
+  tasksCount?: number;
+  ownerName?: string;
+}
+
+export interface ProjectsFilters {
+  status: string;
+  search: string;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+}
