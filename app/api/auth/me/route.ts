@@ -37,6 +37,7 @@ async function meHandler(request: NextRequest) {
 				lastName: true,
 				username: true,
 				email: true,
+				role: true,
 				avatar: true,
 				isVerified: true,
 				isActive: true,

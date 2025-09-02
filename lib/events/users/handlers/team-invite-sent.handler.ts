@@ -17,7 +17,7 @@ export class TeamInviteSentEventHandler implements EventHandler<TeamInviteSentEv
 
     try {
       // Generate the invite link
-      const inviteLink = `${config.origin}/invite/accept?token=${encodeURIComponent(token)}`;
+      const inviteLink = `${config.origin}/en/auth/invite/accept?token=${token}&email=${email}`;
       
       // Get current year for footer
       const currentYear = new Date().getFullYear().toString();

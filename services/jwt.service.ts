@@ -1,4 +1,5 @@
 import { config } from "@/config/config";
+import { TeamRole } from "@/lib/permission";
 import jwt from "jsonwebtoken";
 
 type TokenPayload =
@@ -44,6 +45,32 @@ class JwtService {
 			const secret =
 				type === "access" ? config.jwtSecret : config.jwtRefreshSecret;
 			const decoded = jwt.verify(token, secret as string) as TokenPayload;
+			return decoded;
+		} catch (error) {
+			console.error("JWT verification failed:", error);
+			return null; // Invalid token
+		}
+	}
+
+	generateInviteToken(payload: {
+		email: string;
+		teamId: string;
+		role: TeamRole;
+	}) {
+		const token = jwt.sign(payload, config.jwtSecret as string, {
+			expiresIn: "15m", // Access token expires in 15 minutes
+		});
+
+		return token;
+	}
+
+	verifyInviteToken(token: string) {
+		try {
+			const decoded = jwt.verify(token, config.jwtSecret as string) as {
+				email: string;
+				teamId: string;
+				role: TeamRole;
+			};
 			return decoded;
 		} catch (error) {
 			console.error("JWT verification failed:", error);

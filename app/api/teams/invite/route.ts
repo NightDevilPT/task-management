@@ -14,6 +14,7 @@ import { TeamRole } from "@/lib/permission";
 import { TeamInviteStatus } from "@prisma/client";
 import { generateInviteToken } from "@/lib/utils";
 import { TeamInviteSentEvent } from "@/lib/events/users/impl/team-invite-sent.event";
+import jwtService from "@/services/jwt.service";
 
 async function handleTeamInvite(request: NextRequest) {
 	try {
@@ -245,7 +246,7 @@ async function handleTeamInvite(request: NextRequest) {
 		}
 
 		// Generate invite token and expiry
-		const token = generateInviteToken(email, teamId, role);
+		const token = jwtService.generateInviteToken({ email, teamId, role });
 		const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
 		// Create team invite

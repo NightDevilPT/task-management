@@ -38,7 +38,7 @@ export function decodeInviteToken(token: string): {
 	timestamp: number;
 } | null {
 	try {
-		const decodedString = Buffer.from(token, "base64url").toString("utf-8");
+		const decodedString = Buffer.from(token, "base64url").toString();
 		return JSON.parse(decodedString);
 	} catch (error) {
 		return null;

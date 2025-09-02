@@ -95,6 +95,16 @@
 		"createButton": "Create Team",
 		"updateButton": "Update Team"
 	},
+	"invite": {
+		"title": "Join Team",
+		"description": "You've been invited to join",
+		"defaultDescription": "Complete your registration to join the team",
+		"onProject": "on project",
+		"asRole": "as",
+		"by": "by",
+		"emailLocked": "Email is pre-filled from your invite",
+		"submitButton": "Join Team & Create Account"
+	},
 	"success": {
 		"userCreatedVerificationEmailSent": "User created successfully. Verification email sent.",
 		"userVerifiedSuccessfully": "User verified successfully.",
@@ -146,6 +156,7 @@
 		"currentPasswordRequired": "Current password is required.",
 		"emailAlreadyExists": "Email already exists.",
 		"usernameAlreadyExists": "Username already exists.",
-		"userNotFound": "User not found."
+		"userNotFound": "User not found.",
+		"inviteAlreadyUsed": "Invite already used"
 	}
 }

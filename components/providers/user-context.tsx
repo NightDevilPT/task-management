@@ -49,7 +49,8 @@ const isAuthRoute = (pathname: string): boolean => {
 		pathname.includes("/auth/login") ||
 		pathname.includes("/auth/signup") ||
 		pathname.includes("/auth/verify") ||
-		pathname.includes("/auth/update-password")
+		pathname.includes("/auth/update-password") || 
+		pathname.includes("/auth/invite/accept")
 	);
 };
 
