@@ -1,25 +1,27 @@
 // app/projects/components/projects-header.tsx
+import { GenericSelect } from "@/components/shared/data-select";
 import { Button } from "@/components/ui/button";
+import { ISelectOptions } from "@/interface/api.interface";
 import { Plus } from "lucide-react";
 
-interface ProjectsHeaderProps {
+interface TeamsHeaderProps {
 	onOpenDialog: () => void;
 	dictionary: any;
 }
 
-export default function ProjectsHeader({
+export default function TeamHeader({
 	onOpenDialog,
 	dictionary,
-}: ProjectsHeaderProps) {
+}: TeamsHeaderProps) {
 	return (
 		<div className="flex items-center justify-between">
 			<h1 className="text-3xl font-bold">
-				{dictionary?.projects?.projects || "Projects"}
+				{dictionary?.teams?.title || "Teams"}
 			</h1>
 
 			<Button onClick={onOpenDialog}>
 				<Plus className="h-4 w-4 mr-2" />
-				{dictionary?.projects?.createProject || "Create Project"}
+				{dictionary?.teams?.createTeam || "Create Team"}
 			</Button>
 		</div>
 	);

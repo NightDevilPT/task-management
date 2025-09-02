@@ -1,3 +1,15 @@
+import { TeamRole } from "@/lib/permission";
+import { Project } from "./project.interface";
+
+export interface User {
+	id: string;
+	firstName: string;
+	lastName: string;
+	username: string;
+	email: string;
+	avatar: string;
+}
+
 // @/interface/team.interface.ts
 export interface CreateTeamRequest {
 	name: string;
@@ -10,41 +22,29 @@ export interface UpdateTeamRequest {
 	description?: string;
 }
 
-export interface TeamMemberResponse {
+export interface TeamMember {
 	id: string;
-	role: "ADMIN" | "MANAGER" | "MEMBER";
+	role: TeamRole;
 	joinedAt: Date;
-	user: {
-		id: string;
-		firstName: string;
-		lastName: string;
-		username: string;
-		email: string;
-		avatar?: string;
-	};
+	userId: string;
+	teamId: string;
+	projectId: string;
+	user: User;
 }
 
-export interface TeamResponse {
+export interface Team {
 	id: string;
 	name: string;
-	description?: string | undefined | null;
+	description?: string;
 	createdAt: Date;
 	updatedAt: Date;
-	owner: {
-		id: string;
-		firstName: string;
-		lastName: string;
-		username: string;
-		email: string;
-	};
-	project: {
-		id: string;
-		name: string;
-		status: "ACTIVE" | "ARCHIVED" | "COMPLETED" | "ON_HOLD";
-	};
-	members: TeamMemberResponse[];
-	_count?: {
-		tasks: number;
+	ownerId: string;
+	projectId: string;
+	owner: User;
+	project: Project;
+	members: TeamMember[];
+	_count: {
 		members: number;
+		tasks: number;
 	};
 }

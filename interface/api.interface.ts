@@ -7,6 +7,13 @@ export interface ApiResponse<T = unknown> {
 	error?: string;
 }
 
+// interface/project.interface.ts
+export interface ISelectOptions {
+	id: string;
+	name: string;
+	description?: string | null;
+}
+
 export enum ApiEndpoints {
 	// User-related endpoints
 	REGISTER_USER = "/users/register",

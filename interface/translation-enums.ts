@@ -18,6 +18,10 @@ export enum TranslationEnum {
 	PROJECT_CREATED_SUCCESSFULLY = "projectCreatedSuccessfully",
 	PROJECT_UPDATED_SUCCESSFULLY = "projectUpdatedSuccessfully",
 	PROJECT_RETRIEVED_SUCCESSFULLY = "projectRetrievedSuccessfully",
+
+	TEAM_CREATED_SUCCESSFULLY = "teamCreatedSuccessfully",
+	TEAM_UPDATED_SUCCESSFULLY = "teamUpdatedSuccessfully",
+	TEAM_RETRIEVED_SUCCESSFULLY = "teamRetrievedSuccessfully",
 }
 
 export enum TranslationErrorEnum {
@@ -56,5 +60,9 @@ export enum TranslationErrorEnum {
 	USERNAME_ALREADY_EXISTS = "usernameAlreadyExists",
 	USER_NOT_FOUND = "userNotFound",
 
-	PROJECT_NOT_FOUND = "Project not found",
+	PROJECT_NOT_FOUND = "projectNotFound",
+	PROJECT_ACCESS_DENIED = "projectAccessDenied",
+
+	TEAM_NOT_FOUND = "teamNotFound",
+	TEAM_ALREADY_EXISTS = "teamAlreadyExists",
 }

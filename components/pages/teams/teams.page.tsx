@@ -1,58 +1,32 @@
-// app/projects/page.tsx
+// app/teams/page.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { useLanguage } from "@/components/providers/language-provider";
-import ApiService from "@/services/api.service";
 import { toast } from "sonner";
+import { debounce } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import ApiService from "@/services/api.service";
+import { useState, useEffect, useCallback } from "react";
+import { useLanguage } from "@/components/providers/language-provider";
 
 // Components
-import ProjectsHeader from "./_components/project-header";
-import { Project } from "@/interface/project.interface";
-import ProjectsFilters from "./_components/project-filter";
-import ProjectsTable from "./_components/project-table";
-import ProjectDialog from "./_components/project-dialog";
-import TableLoadingSkeleton from "../shared/project-loading-skeleton";
-import { debounce } from "@/lib/utils";
+import { Team } from "@/interface/team.interface";
+import TeamsTable from "./_components/teams-table";
+import TeamsFilters from "./_components/teams-filter";
+import TeamsHeader from "./_components/teams-header";
+import TableLoadingSkeleton from "../../shared/project-loading-skeleton";
+import TeamDialog from "./_components/teams-dialog";
 
-// Define the ApiResponse type to match backend response
-interface ApiResponse {
-	message: string;
-	statusCode: number;
-	data?: Project[];
-	meta?: {
-		pagination: {
-			currentPage: number;
-			perPage: number;
-			totalCount: number;
-			totalPages: number;
-			hasNextPage: boolean;
-			hasPrevPage: boolean;
-		};
-		filters: {
-			search: string;
-			status: string;
-			sortBy: string;
-			sortOrder: string;
-		};
-	};
-	error?: string;
-	errors?: string[];
-}
-
-export default function ProjectsPage() {
+export default function TeamsPage() {
 	const { dictionary, isLoading: isLanguageLoading } = useLanguage();
 	const router = useRouter();
 
 	// State management
-	const [projects, setProjects] = useState<Project[]>([]);
+	const [teams, setTeams] = useState<Team[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
-	const [selectedProject, setSelectedProject] = useState<Project | null>(
-		null
-	);
+	const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+	const [projects, setProjects] = useState<any[]>([]);
 
 	// Pagination state
 	const [currentPage, setCurrentPage] = useState(1);
@@ -62,28 +36,42 @@ export default function ProjectsPage() {
 
 	// Filter state
 	const [filters, setFilters] = useState({
-		status: "",
 		search: "",
+		projectId: "",
 		sortBy: "createdAt",
 		sortOrder: "desc" as "asc" | "desc",
 	});
 
-	// Fetch projects with pagination and filters
+	// Fetch projects for filter dropdown
 	const fetchProjects = async () => {
+		try {
+			const response = await ApiService.get(`/projects/me`);
+			if (response?.data) {
+				setProjects(response.data);
+			}
+		} catch (error) {
+			console.error("Error fetching projects:", error);
+		}
+	};
+
+	// Fetch teams with pagination and filters
+	const fetchTeams = async () => {
 		try {
 			setLoading(true);
 			const queryParams = new URLSearchParams({
 				page: currentPage.toString(),
 				limit: pageSize.toString(),
 				...(filters.search && { search: filters.search }),
-				...(filters.status &&
-					filters.status !== "all" && { status: filters.status }),
+				...(filters.projectId &&
+					filters.projectId !== "all" && {
+						projectId: filters.projectId,
+					}),
 				sortBy: filters.sortBy,
 				sortOrder: filters.sortOrder,
 			});
 
 			const response = await ApiService.get(
-				`/projects/get-project?${queryParams}`
+				`/teams/get-teams?${queryParams}`
 			);
 
 			if (
@@ -91,14 +79,14 @@ export default function ProjectsPage() {
 				response.data &&
 				response.meta
 			) {
-				setProjects(response.data as unknown as Project[]);
+				setTeams(response.data);
 				setTotalPages(response.meta.pagination.totalPages);
 				setTotalItems(response.meta.pagination.totalCount);
 			} else {
 				toast.error(dictionary?.general.error, {
 					description:
 						response?.message ||
-						dictionary?.general.errorFetchingProjects,
+						dictionary?.general.errorFetchingTeams,
 				});
 			}
 		} catch (error: any) {
@@ -112,6 +100,7 @@ export default function ProjectsPage() {
 
 	useEffect(() => {
 		fetchProjects();
+		fetchTeams();
 	}, [currentPage, pageSize, filters]);
 
 	// Handle page change
@@ -125,55 +114,53 @@ export default function ProjectsPage() {
 			if (newFilters.search !== undefined) {
 				debounce(() => {
 					setFilters((prev) => ({ ...prev, ...newFilters }));
-					setCurrentPage(1); // Reset to first page when filters change
+					setCurrentPage(1);
 				}, 500)();
 			} else {
 				setFilters((prev) => ({ ...prev, ...newFilters }));
-				setCurrentPage(1); // Reset to first page when filters change
+				setCurrentPage(1);
 			}
 		},
 		[]
 	);
 
 	// Open dialog with specific mode
-	const openDialog = (mode: "create" | "edit", project?: Project) => {
+	const openDialog = (mode: "create" | "edit", team?: Team) => {
 		setDialogMode(mode);
-		setSelectedProject(project || null);
+		setSelectedTeam(team || null);
 		setIsDialogOpen(true);
 	};
 
 	// Handle form success
-	const handleFormSuccess = (project: Project, mode: "create" | "edit") => {
+	const handleFormSuccess = (team: Team, mode: "create" | "edit") => {
 		setIsDialogOpen(false);
-		setSelectedProject(null);
-		fetchProjects();
+		setSelectedTeam(null);
+		fetchTeams();
 	};
 
-	// Handle project deletion
-	const handleDeleteProject = async (projectId: string) => {
-		if (!window.confirm(dictionary?.projects?.deleteConfirm)) return;
+	// Handle team deletion
+	const handleDeleteTeam = async (teamId: string) => {
+		if (!window.confirm(dictionary?.teams?.deleteConfirm)) return;
 
 		try {
-			const response = await ApiService.delete(
-				`/api/projects/${projectId}`
-			);
+			const response = await ApiService.delete(`/teams/${teamId}`);
 
 			if (response?.statusCode === 200) {
 				toast.success(dictionary?.general.success, {
-					description: dictionary?.success?.PROJECT_DELETED,
+					description: dictionary?.success?.TEAM_DELETED,
 				});
-				fetchProjects();
+				fetchTeams();
 			} else {
 				toast.error(dictionary?.general.error, {
 					description:
 						response?.message ||
-						dictionary?.general.errorDeletingProject,
+						dictionary?.general.errorDeletingTeam,
 				});
 			}
 		} catch (error) {
-			console.error("Error deleting project:", error);
+			console.error("Error deleting team:", error);
 			toast.error(dictionary?.general.error, {
-				description: dictionary?.general.errorDeletingProject,
+				description: dictionary?.general.errorDeletingTeam,
 			});
 		}
 	};
@@ -184,19 +171,20 @@ export default function ProjectsPage() {
 
 	return (
 		<div className="container mx-auto py-6 space-y-6">
-			<ProjectsHeader
+			<TeamsHeader
 				onOpenDialog={() => openDialog("create")}
 				dictionary={dictionary}
 			/>
 
-			<ProjectsFilters
+			<TeamsFilters
 				filters={filters}
 				onFilterChange={handleFilterChange}
 				dictionary={dictionary}
+				projects={projects}
 			/>
 
-			<ProjectsTable
-				projects={projects}
+			<TeamsTable
+				teams={teams}
 				loading={loading}
 				currentPage={currentPage}
 				totalPages={totalPages}
@@ -204,19 +192,20 @@ export default function ProjectsPage() {
 				pageSize={pageSize}
 				onPageChange={handlePageChange}
 				onPageSizeChange={setPageSize}
-				onEditProject={(project) => openDialog("edit", project)}
-				onDeleteProject={handleDeleteProject}
-				onViewProject={(id) => router.push(`/projects/${id}`)}
+				onEditTeam={(team) => openDialog("edit", team)}
+				onDeleteTeam={handleDeleteTeam}
+				onViewTeam={(id) => router.push(`/teams/${id}`)}
 				dictionary={dictionary}
 			/>
 
-			<ProjectDialog
+			<TeamDialog
 				isOpen={isDialogOpen}
 				onOpenChange={setIsDialogOpen}
 				mode={dialogMode}
-				project={selectedProject}
-				onSuccess={(project) => handleFormSuccess(project, dialogMode)}
+				team={selectedTeam}
+				onSuccess={(team) => handleFormSuccess(team, dialogMode)}
 				dictionary={dictionary}
+				projects={projects}
 			/>
 		</div>
 	);

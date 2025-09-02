@@ -83,6 +83,18 @@
 		"updateButton": "Update Project",
 		"deleteConfirm": "Are you sure you want to delete this project?"
 	},
+	"teams": {
+		"title": "Teams",
+		"createTeam": "Create Team",
+		"selectProject": "Select Project",
+		"teamName": "Team Name",
+		"namePlaceholder": "Enter team name",
+		"description": "Description",
+		"descriptionPlaceholder": "Enter team description",
+		"project": "Project",
+		"createButton": "Create Team",
+		"updateButton": "Update Team"
+	},
 	"success": {
 		"userCreatedVerificationEmailSent": "User created successfully. Verification email sent.",
 		"userVerifiedSuccessfully": "User verified successfully.",
@@ -101,7 +113,10 @@
 
 		"projectCreatedSuccessfully": "Project created successfully.",
 		"projectUpdatedSuccessfully": "Project updated successfully.",
-		"projectRetrievedSuccessfully": "Project retrieved successfully."
+		"projectRetrievedSuccessfully": "Project retrieved successfully.",
+
+		"teamCreatedSuccessfully": "Team created successfully",
+		"teamUpdatedSuccessfully": "Team updated successfully"
 	},
 	"error": {
 		"internalServerError": "Internal server error. Please try again later.",

@@ -16,7 +16,7 @@ export const navMain = (language: string) => [
 	},
 	{
 		title: "Teams",
-		url: "#",
+		url: `/${language}/teams`,
 		icon: BsMicrosoftTeams,
 	},
 	{

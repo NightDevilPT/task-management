@@ -1,13 +1,10 @@
 // app/projects/components/projects-table.tsx
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import DataTable, { ColumnConfig } from "@/components/shared/data-table";
-import PaginationComponent from "@/components/shared/pagination";
-import TableLoadingSkeleton from "@/components/shared/project-loading-skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Project, ProjectStatusEnum } from "@/interface/project.interface";
-import ProjectsTableActions from "./project-table-actions";
 import React from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import PaginationComponent from "@/components/shared/pagination";
+import { Project, ProjectStatusEnum } from "@/interface/project.interface";
+import DataTable, { ColumnConfig } from "@/components/shared/data-table";
 
 interface ProjectsTableProps {
 	projects: Project[];
