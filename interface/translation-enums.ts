@@ -22,6 +22,9 @@ export enum TranslationEnum {
 	TEAM_CREATED_SUCCESSFULLY = "teamCreatedSuccessfully",
 	TEAM_UPDATED_SUCCESSFULLY = "teamUpdatedSuccessfully",
 	TEAM_RETRIEVED_SUCCESSFULLY = "teamRetrievedSuccessfully",
+	INVITE_SENT_SUCCESSFULLY = "inviteSendSuccessfully",
+
+	USER_ADDED_TO_TEAM_SUCCESSFULLY = "userAddedToTeamSuccessfully",
 }
 
 export enum TranslationErrorEnum {
@@ -36,6 +39,7 @@ export enum TranslationErrorEnum {
 	FORBIDDEN = "forbidden",
 	PERMISSION_DENIED = "permissionDenied",
 	INVALID_PAGINATION_PARAMETERS = "invalidPaginationParameters",
+	INVALID_ROLE = "invalidRole",
 
 	// User Api Error Message
 	EMAIL_IS_REQUIRED = "emailIsRequired",
@@ -65,4 +69,14 @@ export enum TranslationErrorEnum {
 
 	TEAM_NOT_FOUND = "teamNotFound",
 	TEAM_ALREADY_EXISTS = "teamAlreadyExists",
+	TEAM_NOT_IN_PROJECT = "teamNotInProject",
+	CANNOT_ASSIGN_ADMIN_ROLE = "cannotAssignAdminRole",
+	USER_ALREADY_IN_TEAM = "userAlreadyInTeam",
+
+	INVITE_ALREADY_SENT = "inviteAlreadySent",
+	INVALID_OR_EXPIRED_INVITE = "invalidOrExpiredInvite",
+	INVITE_ALREADY_USED = "inviteAlreadyUsed",
+	INVITE_EXPIRED = "inviteExpired",
+	USERNAME_ALREADY_TAKEN = "usernameAlreadyTaken",
+	
 }

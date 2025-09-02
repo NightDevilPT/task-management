@@ -21,7 +21,7 @@ export const navMain = (language: string) => [
 	},
 	{
 		title: "Kanban",
-		url: "#",
+		url: `/${language}/kanban`,
 		icon: PiKanbanFill,
 	},
 	{

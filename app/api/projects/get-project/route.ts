@@ -93,12 +93,6 @@ async function handleGetProjects(request: NextRequest): Promise<NextResponse> {
 			userRole = TeamRole.MANAGER;
 		}
 
-		// Create user context for permission checking
-		const userContext: UserContext = {
-			id: user.id,
-			role: userRole,
-		};
-
 		// Build where clause based on user role and filters
 		let whereClause: any = {};
 
@@ -114,7 +108,7 @@ async function handleGetProjects(request: NextRequest): Promise<NextResponse> {
 			whereClause.teams = {
 				some: {
 					id: {
-						in: userTeamIds.length > 0 ? userTeamIds : [null], // Handle case with no teams
+						in: userTeamIds.length > 0 ? userTeamIds : [], // Handle case with no teams
 					},
 				},
 			};
@@ -135,6 +129,10 @@ async function handleGetProjects(request: NextRequest): Promise<NextResponse> {
 
 		// Calculate skip for pagination
 		const skip = (page - 1) * limit;
+		console.log(
+			JSON.stringify(whereClause, null, 2),
+			"CONSOLING WHERE CLAUSES"
+		);
 
 		// Fetch projects with pagination
 		const [projects, totalCount] = await Promise.all([
@@ -211,7 +209,7 @@ async function handleGetProjects(request: NextRequest): Promise<NextResponse> {
 			{ status: 200 }
 		);
 	} catch (error: any) {
-		console.error("Error fetching projects:", error);
+		console.error("Error fetching projects:", error.message);
 
 		return NextResponse.json<ApiResponse>(
 			{

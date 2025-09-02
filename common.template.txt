@@ -57,7 +57,7 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
   lastLogin    DateTime?
   isActive     Boolean  @default(true)
-  
+  role         TeamRole @default(MEMBER)
   // Relations
   teamMemberships TeamMember[]
   createdTeams    Team[]      @relation("TeamOwner")
@@ -253,97 +253,191 @@ model Activity {
   @@map("activities")
 }
 
-Reference Route Code : // app/api/auth/me/route.ts
+Reference Route Code
+Create project Code : // app/api/projects/route.ts
 import {
 	TranslationEnum,
 	TranslationErrorEnum,
 } from "@/interface/translation-enums";
 import {
-	TokenPayload,
-	withTokenValidation,
-} from "@/middleware/cookie-validate.middleware";
-import bcrypt from "bcryptjs";
+	Action,
+	PermissionService,
+	ResourceType,
+	TeamRole,
+	UserContext,
+} from "@/lib/permission";
+import {
+	ICreateProjectRequest,
+	ProjectStatusEnum,
+} from "@/interface/project.interface";
 import { prisma } from "@/lib/prisma";
-import { validateEmail } from "@/lib/validator";
 import { ApiResponse } from "@/interface/api.interface";
 import { NextRequest, NextResponse } from "next/server";
 import { withRequestTiming } from "@/middleware/timestamp.middleware";
+import { withTokenValidation } from "@/middleware/cookie-validate.middleware";
 
-async function meHandler(request: NextRequest) {
+// POST /api/projects - Creates a new project with permission checks
+async function handleCreateProject(request: NextRequest) {
 	try {
 		const payload = (request as any)?.user;
+		// Validate token payload
 		if (!payload) {
-			const response: ApiResponse = {
-				message: TranslationErrorEnum.UNAUTHORIZED,
-				statusCode: 401,
-				error: "Authentication Error",
-			};
-			return NextResponse.json(response, { status: 401 });
+			return NextResponse.json<ApiResponse>(
+				{
+					message: TranslationErrorEnum.UNAUTHORIZED,
+					statusCode: 401,
+					error: "Authentication Error",
+				},
+				{ status: 401 }
+			);
 		}
 
-		console.log(payload, "PAYLOAD");
-
-		// Get user from database
+		// Fetch user details
 		const user = await prisma.user.findUnique({
 			where: { id: payload.id },
 			select: {
 				id: true,
-				firstName: true,
-				lastName: true,
-				username: true,
+				role: true, // Assumes role is a TeamRole field in User model
 				email: true,
-				avatar: true,
-				isVerified: true,
 				isActive: true,
-				createdAt: true,
-				updatedAt: true,
-				lastLogin: true,
 			},
 		});
 
-		if (!user) {
-			const response: ApiResponse = {
-				message: TranslationErrorEnum.USER_DOES_NOT_EXIST,
-				statusCode: 404,
-				error: "User Error",
-			};
-			return NextResponse.json(response, { status: 404 });
+		// Check if user exists and is active
+		if (!user || !user.isActive) {
+			return NextResponse.json<ApiResponse>(
+				{
+					message: TranslationErrorEnum.USER_DOES_NOT_EXIST,
+					statusCode: 404,
+					error: "User Error",
+				},
+				{ status: 404 }
+			);
 		}
 
-		if (!user.isActive) {
-			const response: ApiResponse = {
-				message: TranslationErrorEnum.USER_DEACTIVATED,
-				statusCode: 403,
-				error: "Account Error",
-			};
-			return NextResponse.json(response, { status: 403 });
-		}
-
-		// Create success response
-		const response: ApiResponse = {
-			message: TranslationEnum.USER_PROFILE_RETRIEVED,
-			statusCode: 200,
-			data: user,
+		// Verify permission to create a project
+		const userContext: UserContext = {
+			id: user.id,
+			role: user.role as TeamRole,
 		};
 
-		return NextResponse.json(response, { status: 200 });
+		if (
+			!PermissionService.hasPermission(
+				userContext,
+				Action.CREATE,
+				ResourceType.PROJECT
+			)
+		) {
+			return NextResponse.json<ApiResponse>(
+				{
+					message: TranslationErrorEnum.PERMISSION_DENIED,
+					statusCode: 403,
+					error: "Permission Error",
+				},
+				{ status: 403 }
+			);
+		}
+
+		// Parse and validate request body
+		const { name, description, status }: ICreateProjectRequest =
+			await request.json();
+
+		if (!name?.trim()) {
+			return NextResponse.json<ApiResponse>(
+				{
+					message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
+					statusCode: 400,
+					error: "Validation Error",
+				},
+				{ status: 400 }
+			);
+		}
+
+		// Create the project
+		const newProject = await prisma.project.create({
+			data: {
+				name: name.trim(),
+				description: description?.trim(),
+				ownerId: user.id,
+				status:
+					(status as ProjectStatusEnum) || ProjectStatusEnum.ACTIVE,
+			},
+			include: {
+				owner: {
+					select: {
+						id: true,
+						firstName: true,
+						lastName: true,
+						username: true,
+						email: true,
+						avatar: true,
+					},
+				},
+			},
+		});
+
+		// Create a team for the project first
+		const newTeam = await prisma.team.create({
+			data: {
+				name: `${newProject.name} Team`,
+				projectId: newProject.id,
+				ownerId: user.id,
+			},
+		});
+
+		// Add the creator as a team member to the project
+		await prisma.teamMember.create({
+			data: {
+				userId: user.id,
+				teamId: newTeam.id, // Assuming teamId is projectId for initial membership
+				role: user.role as TeamRole,
+				projectId: newProject.id,
+			},
+		});
+
+		// Return success response
+		return NextResponse.json<ApiResponse>(
+			{
+				message: TranslationEnum.PROJECT_CREATED_SUCCESSFULLY,
+				statusCode: 201,
+				data: newProject,
+			},
+			{ status: 201 }
+		);
 	} catch (error: any) {
-		console.error("Get user profile error:", error);
+		console.error("Error creating project:", error);
 
-		const response: ApiResponse = {
-			message: TranslationErrorEnum.INTERNAL_SERVER_ERROR,
-			statusCode: 500,
-			error: "Profile Error",
-			errors: error.message ? [error.message] : undefined,
-		};
-
-		return NextResponse.json(response, { status: 500 });
+		return NextResponse.json<ApiResponse>(
+			{
+				message: TranslationErrorEnum.INTERNAL_SERVER_ERROR,
+				statusCode: 500,
+				error: "Project Creation Error",
+				errors: error.message ? [error.message] : undefined,
+			},
+			{ status: 500 }
+		);
 	}
 }
 
-async function updateMeHandler(request: NextRequest) {
+// Wrap handler with token validation and request timing middleware
+export const POST = withRequestTiming(withTokenValidation(handleCreateProject));
+
+Create Team Code : import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { withTokenValidation } from "@/middleware/cookie-validate.middleware";
+import { withRequestTiming } from "@/middleware/timestamp.middleware";
+import { ApiResponse } from "@/interface/api.interface";
+import {
+	TranslationEnum,
+	TranslationErrorEnum,
+} from "@/interface/translation-enums";
+import { PermissionChecks, TeamRole } from "@/lib/permission";
+
+// ----------------- Create Team Handler -----------------
+async function createTeamHandler(request: NextRequest) {
 	try {
 		const payload = (request as any)?.user;
+
 		if (!payload) {
 			const response: ApiResponse = {
 				message: TranslationErrorEnum.UNAUTHORIZED,
@@ -354,22 +448,24 @@ async function updateMeHandler(request: NextRequest) {
 		}
 
 		const body = await request.json();
-		const {
-			firstName,
-			lastName,
-			username,
-			email,
-			avatar,
-			currentPassword,
-			newPassword,
-		} = body;
+		const { name, description, projectId } = body;
 
-		// Check if user exists and is active
-		const existingUser = await prisma.user.findUnique({
+		// Validate input
+		if (!name?.trim() || !projectId?.trim()) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
+				statusCode: 400,
+				error: "Validation Error",
+			};
+			return NextResponse.json(response, { status: 400 });
+		}
+
+		const user = await prisma.user.findUnique({
 			where: { id: payload.id },
+			select: { id: true, role: true, isActive: true },
 		});
 
-		if (!existingUser) {
+		if (!user || !user.isActive) {
 			const response: ApiResponse = {
 				message: TranslationErrorEnum.USER_DOES_NOT_EXIST,
 				statusCode: 404,
@@ -378,198 +474,623 @@ async function updateMeHandler(request: NextRequest) {
 			return NextResponse.json(response, { status: 404 });
 		}
 
-		if (!existingUser.isActive) {
+		// Find project
+		const project = await prisma.project.findUnique({
+			where: { id: projectId },
+			include: { owner: true },
+		});
+
+		if (!project) {
 			const response: ApiResponse = {
-				message: TranslationErrorEnum.USER_DEACTIVATED,
+				message: TranslationErrorEnum.PROJECT_NOT_FOUND,
+				statusCode: 404,
+				error: "Project Error",
+			};
+			return NextResponse.json(response, { status: 404 });
+		}
+
+		// Check permission
+		const userContext = {
+			id: user.id,
+			role: user.role as TeamRole,
+		};
+
+		if (
+			!PermissionChecks.canCreateTeam(userContext)
+		) {
+			const response: ApiResponse = {
+				message: TranslationErrorEnum.FORBIDDEN,
 				statusCode: 403,
-				error: "Account Error",
+				error: "Permission Error",
 			};
 			return NextResponse.json(response, { status: 403 });
 		}
 
-		// Prepare update data
-		const updateData: any = {};
+		// Create team
+		const team = await prisma.team.create({
+			data: {
+				name: name.trim(),
+				description: description?.trim(),
+				projectId,
+				ownerId: payload.id,
+			},
+		});
 
-		// Validate and set basic fields
-		if (firstName !== undefined) {
-			if (!firstName.trim()) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-			updateData.firstName = firstName.trim();
-		}
-
-		if (lastName !== undefined) {
-			if (!lastName.trim()) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-			updateData.lastName = lastName.trim();
-		}
-
-		if (username !== undefined) {
-			if (!username.trim()) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.ALL_FIELDS_ARE_REQUIRED,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-
-			// Check if username is already taken by another user
-			const existingUsername = await prisma.user.findFirst({
-				where: {
-					username: username.trim(),
-					id: { not: payload.id },
-				},
-			});
-
-			if (existingUsername) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.USERNAME_ALREADY_EXISTS,
-					statusCode: 409,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 409 });
-			}
-
-			updateData.username = username.trim();
-		}
-
-		if (email !== undefined) {
-			if (!email.trim()) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.EMAIL_IS_REQUIRED,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-
-			if (!validateEmail(email)) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.INVALID_EMAIL_FORMAT,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-
-			// Check if email is already taken by another user
-			const existingEmail = await prisma.user.findFirst({
-				where: {
-					email: email.trim(),
-					id: { not: payload.id },
-				},
-			});
-
-			if (existingEmail) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.EMAIL_ALREADY_EXISTS,
-					statusCode: 409,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 409 });
-			}
-
-			updateData.email = email.trim();
-			// If email is changed, mark as unverified and generate new OTP
-			if (email !== existingUser.email) {
-				const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
-				updateData.isVerified = false;
-				updateData.otp = otp;
-				updateData.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-				// TODO: Send verification email here
-			}
-		}
-
-		if (avatar !== undefined) {
-			updateData.avatar = avatar;
-		}
-
-		// Handle password change
-		if (newPassword) {
-			if (!currentPassword) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.CURRENT_PASSWORD_REQUIRED,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-
-			// Verify current password
-			const isCurrentPasswordValid = await bcrypt.compare(
-				currentPassword,
-				existingUser.password
-			);
-			if (!isCurrentPasswordValid) {
-				const response: ApiResponse = {
-					message: TranslationErrorEnum.INVALID_CURRENT_PASSWORD,
-					statusCode: 400,
-					error: "Validation Error",
-				};
-				return NextResponse.json(response, { status: 400 });
-			}
-
-			// Hash new password
-			updateData.password = await bcrypt.hash(newPassword, 12);
-		}
-
-		// Update user
-		const updatedUser = await prisma.user.update({
-			where: { id: payload.id },
-			data: updateData,
-			select: {
-				id: true,
-				firstName: true,
-				lastName: true,
-				username: true,
-				email: true,
-				avatar: true,
-				isVerified: true,
-				isActive: true,
-				createdAt: true,
-				updatedAt: true,
+		// Add creator as team member (ADMIN or MANAGER based on role)
+		await prisma.teamMember.create({
+			data: {
+				userId: payload.id,
+				teamId: team.id,
+				projectId: projectId,
+				role: userContext.role,
 			},
 		});
 
 		const response: ApiResponse = {
-			message: TranslationEnum.USER_PROFILE_UPDATED,
-			statusCode: 200,
-			data: updatedUser,
+			message: TranslationEnum.TEAM_CREATED_SUCCESSFULLY,
+			statusCode: 201,
+			data: team,
 		};
-
-		return NextResponse.json(response, { status: 200 });
+		return NextResponse.json(response, { status: 201 });
 	} catch (error: any) {
-		console.error("Update user profile error:", error);
-
+		console.error("Create team error:", error);
 		const response: ApiResponse = {
 			message: TranslationErrorEnum.INTERNAL_SERVER_ERROR,
 			statusCode: 500,
-			error: "Update Error",
+			error: "Team Creation Error",
 			errors: error.message ? [error.message] : undefined,
 		};
-
 		return NextResponse.json(response, { status: 500 });
 	}
 }
 
-// Apply token validation middleware
-const wrappedGetHandler = withTokenValidation(meHandler);
-const wrappedPutHandler = withTokenValidation(updateMeHandler);
+// ----------------- Exports -----------------
+export const POST = withRequestTiming(withTokenValidation(createTeamHandler));
 
-export const GET = withRequestTiming(wrappedGetHandler);
-export const PUT = withRequestTiming(wrappedPutHandler);
+Get Projects with Pagination Code : import {
+	TranslationEnum,
+	TranslationErrorEnum,
+} from "@/interface/translation-enums";
+import { prisma } from "@/lib/prisma";
+import { ApiResponse } from "@/interface/api.interface";
+import { NextRequest, NextResponse } from "next/server";
+import { TeamRole, UserContext } from "@/lib/permission";
+import { withRequestTiming } from "@/middleware/timestamp.middleware";
+import { withTokenValidation } from "@/middleware/cookie-validate.middleware";
+
+// GET /api/projects - Gets projects with pagination and permission checks
+async function handleGetProjects(request: NextRequest): Promise<NextResponse> {
+	try {
+		const payload = (request as any)?.user;
+
+		// Validate token payload
+		if (!payload) {
+			return NextResponse.json<ApiResponse>(
+				{
+					message: TranslationErrorEnum.UNAUTHORIZED,
+					statusCode: 401,
+					error: "Authentication Error",
+				},
+				{ status: 401 }
+			);
+		}
+
+		// Extract query parameters
+		const { searchParams } = new URL(request.url);
+		const page = parseInt(searchParams.get("page") || "1");
+		const limit = parseInt(searchParams.get("limit") || "10");
+		const search = searchParams.get("search") || "";
+		const status = searchParams.get("status") || "";
+		const sortBy = searchParams.get("sortBy") || "createdAt";
+		const sortOrder = searchParams.get("sortOrder") || "desc";
+
+		// Validate pagination parameters
+		if (page < 1 || limit < 1 || limit > 100) {
+			return NextResponse.json<ApiResponse>(
+				{
+					message: TranslationErrorEnum.INVALID_PAGINATION_PARAMETERS,
+					statusCode: 400,
+					error: "Validation Error",
+				},
+				{ status: 400 }
+			);
+		}
+
+		// Fetch user details
+		const user = await prisma.user.findUnique({
+			where: { id: payload.id },
+			select: {
+				id: true,
+				email: true,
+				isActive: true,
+				teamMemberships: {
+					select: {
+						role: true,
+						teamId: true,
+						projectId: true,
+					},
+				},
+			},
+		});
+
+		// Check if user exists and is active
+		if (!user || !user.isActive) {
+			return NextResponse.json<ApiResponse>(
+				{
+					message: TranslationErrorEnum.USER_DOES_NOT_EXIST,
+					statusCode: 404,
+					error: "User Error",
+				},
+				{ status: 404 }
+			);
+		}
+
+		// Determine user's highest role from team memberships
+		let userRole: TeamRole = TeamRole.MEMBER;
+
+		if (
+			user.teamMemberships.some(
+				(membership) => membership.role === TeamRole.ADMIN
+			)
+		) {
+			userRole = TeamRole.ADMIN;
+		} else if (
+			user.teamMemberships.some(
+				(membership) => membership.role === TeamRole.MANAGER
+			)
+		) {
+			userRole = TeamRole.MANAGER;
+		}
+
+		// Create user context for permission checking
+		const userContext: UserContext = {
+			id: user.id,
+			role: userRole,
+		};
+
+		// Build where clause based on user role and filters
+		let whereClause: any = {};
+
+		if (userRole === TeamRole.ADMIN) {
+			// ADMIN can only see own projects
+			whereClause.ownerId = user.id;
+		} else {
+			// MANAGER/MEMBER can see projects they are connected to through teams
+			const userTeamIds = user.teamMemberships.map(
+				(membership) => membership.teamId
+			);
+
+			whereClause.teams = {
+				some: {
+					id: {
+						in: userTeamIds.length > 0 ? userTeamIds : [null], // Handle case with no teams
+					},
+				},
+			};
+		}
+
+		// Add search filter
+		if (search) {
+			whereClause.OR = [
+				{ name: { contains: search, mode: "insensitive" } },
+				{ description: { contains: search, mode: "insensitive" } },
+			];
+		}
+
+		// Add status filter
+		if (status) {
+			whereClause.status = status;
+		}
+
+		// Calculate skip for pagination
+		const skip = (page - 1) * limit;
+
+		// Fetch projects with pagination
+		const [projects, totalCount] = await Promise.all([
+			prisma.project.findMany({
+				where: whereClause,
+				include: {
+					owner: {
+						select: {
+							id: true,
+							firstName: true,
+							lastName: true,
+							username: true,
+							email: true,
+							avatar: true,
+						},
+					},
+					teams: {
+						select: {
+							id: true,
+							name: true,
+							_count: {
+								select: {
+									members: true,
+								},
+							},
+						},
+					},
+					_count: {
+						select: {
+							tasks: true,
+							teams: true,
+						},
+					},
+				},
+				orderBy: {
+					[sortBy]: sortOrder,
+				},
+				skip,
+				take: limit,
+			}),
+			prisma.project.count({
+				where: whereClause,
+			}),
+		]);
+
+		// Calculate pagination metadata
+		const totalPages = Math.ceil(totalCount / limit);
+		const hasNextPage = page < totalPages;
+		const hasPrevPage = page > 1;
+
+		// Return success response with pagination metadata
+		return NextResponse.json<ApiResponse>(
+			{
+				message: TranslationEnum.PROJECT_RETRIEVED_SUCCESSFULLY,
+				statusCode: 200,
+				data: projects,
+				meta: {
+					pagination: {
+						currentPage: page,
+						perPage: limit,
+						totalCount,
+						totalPages,
+						hasNextPage,
+						hasPrevPage,
+					},
+					filters: {
+						search,
+						status,
+						sortBy,
+						sortOrder,
+					},
+				},
+			},
+			{ status: 200 }
+		);
+	} catch (error: any) {
+		console.error("Error fetching projects:", error);
+
+		return NextResponse.json<ApiResponse>(
+			{
+				message: TranslationErrorEnum.INTERNAL_SERVER_ERROR,
+				statusCode: 500,
+				error: "Projects Fetch Error",
+				errors: error.message ? [error.message] : undefined,
+			},
+			{ status: 500 }
+		);
+	}
+}
+
+// Wrap handler with token validation and request timing middleware
+export const GET = withRequestTiming(withTokenValidation(handleGetProjects));
+
+
+Get Teams With Pagination : import {
+	TranslationEnum,
+	TranslationErrorEnum,
+} from "@/interface/translation-enums";
+import { prisma } from "@/lib/prisma";
+import { ApiResponse } from "@/interface/api.interface";
+import { NextRequest, NextResponse } from "next/server";
+import { TeamRole, UserContext } from "@/lib/permission";
+import { withRequestTiming } from "@/middleware/timestamp.middleware";
+import { withTokenValidation } from "@/middleware/cookie-validate.middleware";
+
+// GET /api/teams - Gets teams with pagination, permission checks, and project filtering
+async function handleGetTeams(request: NextRequest): Promise<NextResponse> {
+	try {
+		const payload = (request as any)?.user;
+
+		// Validate token payload
+		if (!payload) {
+			return NextResponse.json<ApiResponse>(
+				{
+					message: TranslationErrorEnum.UNAUTHORIZED,
+					statusCode: 401,
+					error: "Authentication Error",
+				},
+				{ status: 401 }
+			);
+		}
+
+		// Extract query parameters
+		const { searchParams } = new URL(request.url);
+		const page = parseInt(searchParams.get("page") || "1");
+		const limit = parseInt(searchParams.get("limit") || "10");
+		const search = searchParams.get("search") || "";
+		const projectId = searchParams.get("projectId") || "";
+		const sortBy = searchParams.get("sortBy") || "createdAt";
+		const sortOrder = searchParams.get("sortOrder") || "desc";
+
+		// Validate pagination parameters
+		if (page < 1 || limit < 1 || limit > 100) {
+			return NextResponse.json<ApiResponse>(
+				{
+					message: TranslationErrorEnum.INVALID_PAGINATION_PARAMETERS,
+					statusCode: 400,
+					error: "Validation Error",
+				},
+				{ status: 400 }
+			);
+		}
+
+		// Fetch user details with team memberships and project connections
+		const user = await prisma.user.findUnique({
+			where: { id: payload.id },
+			select: {
+				id: true,
+				email: true,
+				isActive: true,
+				teamMemberships: {
+					select: {
+						role: true,
+						teamId: true,
+						projectId: true,
+						team: {
+							select: {
+								projectId: true,
+							},
+						},
+					},
+				},
+				createdTeams: {
+					select: {
+						id: true,
+						projectId: true,
+					},
+				},
+				createdProjects: {
+					select: {
+						id: true,
+					},
+				},
+			},
+		});
+
+		// Check if user exists and is active
+		if (!user || !user.isActive) {
+			return NextResponse.json<ApiResponse>(
+				{
+					message: TranslationErrorEnum.USER_DOES_NOT_EXIST,
+					statusCode: 404,
+					error: "User Error",
+				},
+				{ status: 404 }
+			);
+		}
+
+		// Validate projectId if provided
+		if (projectId) {
+			// Check if project exists
+			const project = await prisma.project.findUnique({
+				where: { id: projectId },
+				select: { id: true },
+			});
+
+			if (!project) {
+				return NextResponse.json<ApiResponse>(
+					{
+						message: TranslationErrorEnum.PROJECT_NOT_FOUND,
+						statusCode: 404,
+						error: "Project Error",
+					},
+					{ status: 404 }
+				);
+			}
+
+			// Check if user has access to this project
+			const userHasAccessToProject =
+				// User is owner of the project
+				user.createdProjects.some((p) => p.id === projectId) ||
+				// User is member of a team in this project
+				user.teamMemberships.some((m) => m.projectId === projectId) ||
+				// User owns a team in this project
+				user.createdTeams.some((t) => t.projectId === projectId);
+
+			if (!userHasAccessToProject) {
+				return NextResponse.json<ApiResponse>(
+					{
+						message: TranslationErrorEnum.PROJECT_ACCESS_DENIED,
+						statusCode: 403,
+						error: "Permission Error",
+					},
+					{ status: 403 }
+				);
+			}
+		}
+
+		// Determine user's highest role from team memberships
+		let userRole: TeamRole = TeamRole.MEMBER;
+		const userTeamIds: string[] = [];
+		const userProjectIds: string[] = [];
+
+		// Collect all team and project IDs the user is connected to
+		user.teamMemberships.forEach((membership) => {
+			userTeamIds.push(membership.teamId);
+			userProjectIds.push(membership.projectId);
+
+			// Determine highest role
+			if (membership.role === TeamRole.ADMIN) {
+				userRole = TeamRole.ADMIN;
+			} else if (
+				membership.role === TeamRole.MANAGER &&
+				userRole !== TeamRole.ADMIN
+			) {
+				userRole = TeamRole.MANAGER;
+			}
+		});
+
+		// Add projects user owns
+		user.createdProjects.forEach((project) => {
+			userProjectIds.push(project.id);
+		});
+
+		// Add teams user owns
+		user.createdTeams.forEach((team) => {
+			userTeamIds.push(team.id);
+			userProjectIds.push(team.projectId);
+		});
+
+		// Create user context for permission checking
+		const userContext: UserContext = {
+			id: user.id,
+			role: userRole,
+		};
+
+		// Build where clause based on user role and filters
+		let whereClause: any = {};
+
+		if (userContext.role === TeamRole.ADMIN) {
+			// ADMIN can see all teams in projects they have access to
+			whereClause.projectId = {
+				in: userProjectIds.length > 0 ? userProjectIds : [null],
+			};
+		} else {
+			// MANAGER/MEMBER can only see teams they are members of or own
+			whereClause.OR = [
+				{ id: { in: userTeamIds.length > 0 ? userTeamIds : [null] } },
+				{ ownerId: user.id },
+			];
+		}
+
+		// Add project filter if provided
+		if (projectId) {
+			whereClause.projectId = projectId;
+		}
+
+		// Add search filter
+		if (search) {
+			whereClause.OR = [
+				...(whereClause.OR || []),
+				{ name: { contains: search, mode: "insensitive" } },
+				{ description: { contains: search, mode: "insensitive" } },
+			];
+		}
+
+		// Calculate skip for pagination
+		const skip = (page - 1) * limit;
+
+		// Fetch teams with pagination
+		const [teams, totalCount] = await Promise.all([
+			prisma.team.findMany({
+				where: whereClause,
+				include: {
+					owner: {
+						select: {
+							id: true,
+							firstName: true,
+							lastName: true,
+							username: true,
+							email: true,
+							avatar: true,
+						},
+					},
+					project: {
+						select: {
+							id: true,
+							name: true,
+							status: true,
+						},
+					},
+					members: {
+						select: {
+							id: true,
+							role: true,
+							user: {
+								select: {
+									id: true,
+									firstName: true,
+									lastName: true,
+									username: true,
+									email: true,
+									avatar: true,
+								},
+							},
+						},
+					},
+					_count: {
+						select: {
+							members: true,
+							tasks: true,
+						},
+					},
+				},
+				orderBy: {
+					[sortBy]: sortOrder,
+				},
+				skip,
+				take: limit,
+			}),
+			prisma.team.count({
+				where: whereClause,
+			}),
+		]);
+
+		// Calculate pagination metadata
+		const totalPages = Math.ceil(totalCount / limit);
+		const hasNextPage = page < totalPages;
+		const hasPrevPage = page > 1;
+
+		// Return success response with pagination metadata
+		return NextResponse.json<ApiResponse>(
+			{
+				message: TranslationEnum.TEAM_RETRIEVED_SUCCESSFULLY,
+				statusCode: 200,
+				data: teams,
+				meta: {
+					pagination: {
+						currentPage: page,
+						perPage: limit,
+						totalCount,
+						totalPages,
+						hasNextPage,
+						hasPrevPage,
+					},
+					filters: {
+						search,
+						projectId,
+						sortBy,
+						sortOrder,
+					},
+					userContext: {
+						role: userRole,
+						teamCount: userTeamIds.length,
+						projectCount: [...new Set(userProjectIds)].length, // Unique projects
+					},
+				},
+			},
+			{ status: 200 }
+		);
+	} catch (error: any) {
+		console.error("Error fetching teams:", error);
+
+		return NextResponse.json<ApiResponse>(
+			{
+				message: TranslationErrorEnum.INTERNAL_SERVER_ERROR,
+				statusCode: 500,
+				error: "Teams Fetch Error",
+				errors: error.message ? [error.message] : undefined,
+			},
+			{ status: 500 }
+		);
+	}
+}
+
+// Wrap handler with token validation and request timing middleware
+export const GET = withRequestTiming(withTokenValidation(handleGetTeams));
 
 
 Permission Checker Lib Code : export enum ResourceType {
