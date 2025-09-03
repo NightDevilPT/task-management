@@ -21,7 +21,6 @@ import { LogOutIcon, UserCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUser } from "../user-context";
 
-
 export function NavUser({
 	user,
 }: {
@@ -32,8 +31,8 @@ export function NavUser({
 	};
 }) {
 	const { isMobile } = useSidebar();
-	const { user: userData } = useUser()
-
+	const { user: userData } = useUser();
+	
 	return (
 		<SidebarMenu>
 			<SidebarMenuItem>

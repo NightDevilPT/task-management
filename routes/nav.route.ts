@@ -20,6 +20,11 @@ export const navMain = (language: string) => [
 		icon: BsMicrosoftTeams,
 	},
 	{
+		title: "Invites",
+		url: `/${language}/invites`,
+		icon: BsMicrosoftTeams,
+	},
+	{
 		title: "Kanban",
 		url: `/${language}/kanban`,
 		icon: PiKanbanFill,

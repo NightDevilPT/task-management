@@ -3,6 +3,7 @@
 		"firstName": "First Name",
 		"lastName": "Last Name",
 		"email": "Email",
+		"emailPlaceholder": "jow@example.com",
 		"username": "Username",
 		"password": "Password",
 		"confirmPassword": "Confirm Password",
@@ -14,7 +15,8 @@
 		"view": "View",
 		"edit": "Edit",
 		"delete": "Delete",
-		"actions": "Actions"
+		"actions": "Actions",
+		"selectRole": "Select a role"
 	},
 	"signup": {
 		"title": "Get Started with TaskFlow",
@@ -103,7 +105,11 @@
 		"asRole": "as",
 		"by": "by",
 		"emailLocked": "Email is pre-filled from your invite",
-		"submitButton": "Join Team & Create Account"
+		"submitButton": "Join Team & Create Account",
+		"selectProject": "Select Project",
+		"project": "Project",
+		"team": "Team",
+		"selectTeam": "Select a team"
 	},
 	"success": {
 		"userCreatedVerificationEmailSent": "User created successfully. Verification email sent.",
@@ -126,7 +132,9 @@
 		"projectRetrievedSuccessfully": "Project retrieved successfully.",
 
 		"teamCreatedSuccessfully": "Team created successfully",
-		"teamUpdatedSuccessfully": "Team updated successfully"
+		"teamUpdatedSuccessfully": "Team updated successfully",
+
+		"userAddedToTeamSuccessfully": "User added to team successfully"
 	},
 	"error": {
 		"internalServerError": "Internal server error. Please try again later.",
@@ -157,6 +165,7 @@
 		"emailAlreadyExists": "Email already exists.",
 		"usernameAlreadyExists": "Username already exists.",
 		"userNotFound": "User not found.",
-		"inviteAlreadyUsed": "Invite already used"
+		"inviteAlreadyUsed": "Invite already used",
+		"userAlreadyInTeam": "User already in team"
 	}
 }

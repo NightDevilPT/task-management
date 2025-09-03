@@ -25,26 +25,34 @@ export interface IInviteUserSignup {
 	username: string;
 	token: string;
 }
-
-export interface ITeamInviteResponse {
+// interface/team.interface.ts
+export interface TeamInvite {
 	id: string;
 	email: string;
-	role: ITeamRole;
-	status: ITeamInviteStatus;
-	expiresAt: Date;
-	createdAt: Date;
-	invitedBy: {
+	role: string;
+	token: string;
+	status: string;
+	expiresAt: string;
+	createdAt: string;
+	teamId: string;
+	projectId: string;
+	invitedById: string;
+	projectName: string;
+	teamName: string;
+	invitedByName: string;
+	team?: {
+		id: string;
+		name: string;
+	};
+	project?: {
+		id: string;
+		name: string;
+	};
+	invitedBy?: {
 		id: string;
 		firstName: string;
 		lastName: string;
 		email: string;
-	};
-	team: {
-		id: string;
-		name: string;
-		project: {
-			id: string;
-			name: string;
-		};
+		avatar: string;
 	};
 }

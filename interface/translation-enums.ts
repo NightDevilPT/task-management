@@ -25,6 +25,7 @@ export enum TranslationEnum {
 	INVITE_SENT_SUCCESSFULLY = "inviteSendSuccessfully",
 
 	USER_ADDED_TO_TEAM_SUCCESSFULLY = "userAddedToTeamSuccessfully",
+	INVITES_RETRIEVED_SUCCESSFULLY = "inviteRerievedSuccessfully"
 }
 
 export enum TranslationErrorEnum {
@@ -66,6 +67,7 @@ export enum TranslationErrorEnum {
 
 	PROJECT_NOT_FOUND = "projectNotFound",
 	PROJECT_ACCESS_DENIED = "projectAccessDenied",
+	PROJECT_ID_REQUIRED = "projectIdRequired",
 
 	TEAM_NOT_FOUND = "teamNotFound",
 	TEAM_ALREADY_EXISTS = "teamAlreadyExists",
@@ -78,5 +80,5 @@ export enum TranslationErrorEnum {
 	INVITE_ALREADY_USED = "inviteAlreadyUsed",
 	INVITE_EXPIRED = "inviteExpired",
 	USERNAME_ALREADY_TAKEN = "usernameAlreadyTaken",
-	
+	TEAM_ACCESS_DENIED = "teamAccessDenied"	
 }

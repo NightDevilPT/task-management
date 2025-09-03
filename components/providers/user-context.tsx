@@ -5,12 +5,14 @@ import { useRouter, usePathname } from "next/navigation";
 import ApiService from "@/services/api.service";
 import { toast } from "sonner";
 import { useLanguage } from "@/components/providers/language-provider";
+import { TeamRole } from "@/lib/permission";
 
 interface User {
 	id: string;
 	firstName: string;
 	lastName: string;
 	username: string;
+	role: TeamRole;
 	email: string;
 	avatar?: string;
 	isVerified: boolean;
@@ -49,7 +51,7 @@ const isAuthRoute = (pathname: string): boolean => {
 		pathname.includes("/auth/login") ||
 		pathname.includes("/auth/signup") ||
 		pathname.includes("/auth/verify") ||
-		pathname.includes("/auth/update-password") || 
+		pathname.includes("/auth/update-password") ||
 		pathname.includes("/auth/invite/accept")
 	);
 };

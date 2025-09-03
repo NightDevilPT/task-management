@@ -24,6 +24,7 @@ interface GenericSelectProps {
 	placeholder?: string;
 	defaultValue?: string;
 	onChange: (selected: ISelectOptions | null) => void;
+	disabled?: boolean;
 }
 
 export function GenericSelect({
@@ -31,9 +32,12 @@ export function GenericSelect({
 	defaultValue,
 	placeholder = "Select item...",
 	onChange,
+	disabled = false,
 }: GenericSelectProps) {
 	const [open, setOpen] = React.useState(false);
-	const [selectedId, setSelectedId] = React.useState<string | null>(defaultValue || null);
+	const [selectedId, setSelectedId] = React.useState<string | null>(
+		defaultValue || null
+	);
 	const selectedItem = items.find((item) => item.id === defaultValue) || null;
 
 	const handleSelect = (id: string) => {
@@ -61,7 +65,7 @@ export function GenericSelect({
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent className="w-[250px] p-0">
-				<Command>
+				<Command className={`${disabled && "cursor-not-allowed"}`}>
 					<CommandInput placeholder="Search..." className="h-9" />
 					<CommandList>
 						<CommandEmpty>No items found.</CommandEmpty>
